@@ -1,0 +1,143 @@
+/******************************************************************************
+
+                  版权所有 (C), 2013-2023, 深圳博思高科技有限公司
+
+ ******************************************************************************
+  文 件 名   : Led_Task.c
+  版 本 号   : 初稿
+  作    者   :  
+  生成日期   : 2020年2月25日
+  最近修改   :
+  功能描述   : LED灯控制
+  函数列表   :
+  修改历史   :
+  1.日    期   : 2020年2月25日
+    作    者   :  
+    修改内容   : 创建文件
+
+******************************************************************************/
+
+/*----------------------------------------------*
+ * 包含头文件                                   *
+ *----------------------------------------------*/
+#define LOG_TAG    "led"
+#include "elog.h"
+
+#include "led_task.h"
+#include "spi_flash.h" 
+#include "bsp_led.h"
+#include "bsp_beep.h"
+#include "bsp_dipSwitch.h"
+
+
+/*----------------------------------------------*
+ * 宏定义                                       *
+ *----------------------------------------------*/
+#define LED_TASK_PRIO	    (tskIDLE_PRIORITY)
+#define LED_STK_SIZE 		(configMINIMAL_STACK_SIZE*2)
+
+/*----------------------------------------------*
+ * 常量定义                                     *
+ *----------------------------------------------*/
+const char *ledTaskName = "vLedTask";      //LED任务名称
+
+
+/*----------------------------------------------*
+ * 模块级变量                                   *
+ *----------------------------------------------*/
+TaskHandle_t xHandleTaskLed = NULL;      //LED灯
+
+
+/*----------------------------------------------*
+ * 内部函数原型说明                             *
+ *----------------------------------------------*/
+static void vTaskLed(void *pvParameters);
+
+void CreateLedTask(void)
+{
+    //创建LED任务
+    xTaskCreate((TaskFunction_t )vTaskLed,         
+                (const char*    )ledTaskName,       
+                (uint16_t       )LED_STK_SIZE, 
+                (void*          )NULL,              
+                (UBaseType_t    )LED_TASK_PRIO,    
+                (TaskHandle_t*  )&xHandleTaskLed);
+}
+
+
+//LED任务函数 
+static void vTaskLed(void *pvParameters)
+{ 
+
+//    uint32_t iTime1=0,iTime2  =  0;    
+//    char wbuf[256] = {"hello world"};
+//    char rbuf[256] = {0};
+//    uint16_t i = 0;
+    
+    Sound2(300);
+
+
+//    for(i=0;i<256;i++)
+//    {
+//        if(i % 2 == 0)
+//        {
+//          wbuf[i] = 0x55;
+//        }
+//        else
+//        {
+//            wbuf[i] = 0xBB;        
+//        }
+//    }
+
+//        SPI_FLASH_BufferRead(rbuf,1000,255);
+
+//        dbh("1 rx", rbuf, 255);
+
+//        iTime1  =  xTaskGetTickCount();
+//        SPI_FLASH_SectorErase(1000,1000);
+//        iTime2 = xTaskGetTickCount();   /* 记下结束时间 */
+//        log_d ( "SPI_FLASH_SectorErase，use %d ms\r\n",iTime2 - iTime1 );   
+
+//        SPI_FLASH_BufferRead(rbuf,1000,255);
+
+//        dbh("2 rx", rbuf, 255);        
+
+//        SPI_FLASH_BufferWrite(wbuf,1000,255);        
+
+//        SPI_FLASH_BufferRead(rbuf,1000,255);
+
+//        dbh("3 rx", rbuf, 255);
+
+//        iTime1  =  xTaskGetTickCount();
+//        SPI_FLASH_BulkErase();
+//        iTime2 = xTaskGetTickCount();   /* 记下结束时间 */
+//        log_d ( "SPI_FLASH_BulkErase，use %d ms\r\n",iTime2 - iTime1 );           
+//        
+//        SPI_FLASH_BufferRead(rbuf,1000,255);
+//        
+//        dbh("4 rx", rbuf, 255);
+
+        
+
+
+
+    while(1)
+    {  
+
+//        SPI_FLASH_BufferRead(rbuf,1000,255);
+//        dbh("rx", rbuf, 255);
+
+        LEDERROR = !LEDERROR;
+
+//        SW2_LOW();
+
+		/* 发送事件标志，表示任务正常运行 */        
+		xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_0);  
+//        vTaskDelay(1000); 
+
+//        SW2_HI();
+        vTaskDelay(1000);    
+    }
+} 
+
+
