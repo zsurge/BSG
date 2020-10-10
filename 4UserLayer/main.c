@@ -45,10 +45,6 @@ SemaphoreHandle_t gxMutex = NULL;
 EventGroupHandle_t xCreatedEventGroup = NULL;
 QueueHandle_t xCmdQueue = NULL; 
 QueueHandle_t xCardIDQueue = NULL;
-SemaphoreHandle_t CountSem_Handle = NULL;
-
-
-
 
 /*----------------------------------------------*
  * 内部函数原型说明                             *
@@ -165,8 +161,8 @@ static void AppObjCreate (void)
         App_Printf("创建互斥信号量失败\r\n");
     }    
 
-    //创消息队列，存放刷卡及二维码数据
-    xCardIDQueue = xQueueCreate((UBaseType_t ) QUEUE_LEN,/* 消息队列的长度 */
+    //创消息队列，存放刷卡或卡号下发数据
+    xCardIDQueue = xQueueCreate((UBaseType_t ) CARD_QUEUE_LEN,/* 消息队列的长度 */
                               (UBaseType_t ) sizeof(READER_BUFF_STRU *));/* 消息的大小 */
     if(xCardIDQueue == NULL)
     {
@@ -182,10 +178,7 @@ static void AppObjCreate (void)
     }
    
 
-    /*  创建 CountSem */
-    CountSem_Handle = xSemaphoreCreateCounting(2,2);
-    if (NULL != CountSem_Handle)
-        App_Printf("CountSem_Handle  计数信号量创建成功!\r\n");
+
 
 }
 

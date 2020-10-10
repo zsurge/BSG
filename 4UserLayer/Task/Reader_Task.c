@@ -41,8 +41,8 @@
 #define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 1)
 #define READER_STK_SIZE 		(configMINIMAL_STACK_SIZE*8)
 
-#define READER1         1           
-#define READER2         2
+
+
 
 
 typedef union
@@ -117,6 +117,7 @@ static void vTaskReader(void *pvParameters)
             reverseArray(cardDev1.sn);
             
             ptReaderBuf->devID = READER1; 
+            ptReaderBuf->mode = READMODE;
             memcpy(ptReaderBuf->cardID,cardDev1.sn,sizeof(cardDev1.sn));   
 
 
@@ -125,7 +126,7 @@ static void vTaskReader(void *pvParameters)
 						 (void *) &ptReaderBuf,             /* 发送结构体指针变量ptReader的地址 */
 						 (TickType_t)10) != pdPASS )
 			{
-                xQueueReset(xCardIDQueue);
+//                xQueueReset(xCardIDQueue); 删除该句，为了防止在下发数据的时候刷卡
                 DBG("send card1  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
@@ -142,6 +143,7 @@ static void vTaskReader(void *pvParameters)
             reverseArray(cardDev2.sn);
             
             ptReaderBuf->devID = READER2; 
+            ptReaderBuf->mode = READMODE;            
             memcpy(ptReaderBuf->cardID,cardDev2.sn,sizeof(cardDev2.sn));   
 
 			/* 使用消息队列实现指针变量的传递 */
@@ -149,7 +151,7 @@ static void vTaskReader(void *pvParameters)
 						 (void *) &ptReaderBuf,             /* 发送结构体指针变量ptReader的地址 */
 						 (TickType_t)10) != pdPASS )
 			{
-                xQueueReset(xCardIDQueue);
+//                xQueueReset(xCardIDQueue);删除该句，为了防止在下发数据的时候刷卡
                 DBG("send card2  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                

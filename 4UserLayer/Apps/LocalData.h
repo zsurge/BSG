@@ -79,9 +79,10 @@ void sortHead(HEADINFO_STRU *head,int length);
 
 void qSortCard(HEADINFO_STRU *head,uint32_t length);
 
+void sortLastPageCard(void);
 
 //Ìí¼Ó¿¨ºÅ
-uint8_t addHead(uint8_t *head,uint8_t mode);
+uint8_t addCard(uint8_t *head,uint8_t mode);
 
 //É¾³ý¿¨ºÅ
 int delHead(uint8_t *headBuff,uint8_t mode);

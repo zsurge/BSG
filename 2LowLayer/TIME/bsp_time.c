@@ -34,7 +34,7 @@ volatile uint32_t g500usTimerRS485 = 0;
 volatile uint32_t gPlayTimer = 0;
 volatile uint32_t gFollowTimer = 0;
 volatile uint32_t gRetrogradeTimer = 0;
-
+CARDSORT_STRU gCardSortTimer = {0};
 
 
 //volatile uint32_t gRandomNum = 0;
@@ -46,6 +46,7 @@ void bsp_TimeSysTickHandler (void)
     if (gPlayTimer) gPlayTimer--; 
     if (gFollowTimer) gFollowTimer--;    
     if (gRetrogradeTimer) gRetrogradeTimer--;
+    if (gCardSortTimer.cardSortTimer) gCardSortTimer.cardSortTimer--;    
 }
 
 void bsp_TIM6_Init(void)
@@ -102,10 +103,7 @@ void TIM6_DAC_IRQHandler( void )
 	  	{
 	    	if(WG_Rx_Str[WeiGen2].End_TIME)
 	    		WG_Rx_Str[WeiGen2].End_TIME--; 
-	  	}   
-
-
-
+	  	}
         
 		TIM_ClearITPendingBit(TIM6, TIM_IT_Update);
 	}

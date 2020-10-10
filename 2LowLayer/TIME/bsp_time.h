@@ -20,6 +20,12 @@
 
 /* 被系统调用 */
 
+typedef struct CARDSORT
+{
+    char flag; 
+    volatile uint32_t cardSortTimer; //下发卡号排序超时时间           
+}CARDSORT_STRU;
+
 
 extern volatile uint32_t g500usTimerUART;
 extern volatile uint32_t g500usTimerRS485;
@@ -27,7 +33,7 @@ extern volatile uint32_t g500usTimerRS485;
 extern  volatile uint32_t gPlayTimer;
 extern  volatile uint32_t gFollowTimer;
 extern  volatile uint32_t gRetrogradeTimer;
-
+extern  CARDSORT_STRU gCardSortTimer;
 
 
 

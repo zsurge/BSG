@@ -2656,6 +2656,10 @@ fail:
     return NULL;
 }
 
+
+
+
+
 static void skip_oneline_comment(char **input)
 {
     *input += static_strlen("//");
@@ -2668,6 +2672,7 @@ static void skip_oneline_comment(char **input)
         }
     }
 }
+
 
 static void skip_multiline_comment(char **input)
 {
@@ -2682,6 +2687,7 @@ static void skip_multiline_comment(char **input)
         }
     }
 }
+
 
 static void minify_string(char **input, char **output) {
     (*output)[0] = (*input)[0];
@@ -2704,6 +2710,8 @@ static void minify_string(char **input, char **output) {
         }
     }
 }
+
+
 
 CJSON_PUBLIC(void) cJSON_Minify(char *json)
 {
@@ -2752,6 +2760,10 @@ CJSON_PUBLIC(void) cJSON_Minify(char *json)
     /* and null-terminate. */
     *into = '\0';
 }
+
+
+
+
 
 CJSON_PUBLIC(cJSON_bool) cJSON_IsInvalid(const cJSON * const item)
 {

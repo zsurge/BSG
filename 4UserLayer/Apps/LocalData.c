@@ -294,8 +294,8 @@ static int Bin_Search(HEADINFO_STRU *num,int numsSize,int target)
 
 
 
-
-uint8_t addHead(uint8_t *head,uint8_t mode)
+#ifdef RELEASE
+uint8_t addCard(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
 	uint16_t remainder = 0;
@@ -392,7 +392,8 @@ uint8_t addHead(uint8_t *head,uint8_t mode)
 //        
         for(int i=0;i<remainder+1;i++)
         {
-            log_d("add = %d,id =%x,sn =%02x,%02x,%02x,%02x\r\n",addr,gSectorBuff[i].headData.id,gSectorBuff[i].headData.sn[0],gSectorBuff[i].headData.sn[1],gSectorBuff[i].headData.sn[2],gSectorBuff[i].headData.sn[3]);
+//            log_d("add = %d,id =%x,sn =%02x,%02x,%02x,%02x\r\n",addr,gSectorBuff[i].headData.id,gSectorBuff[i].headData.sn[0],gSectorBuff[i].headData.sn[1],gSectorBuff[i].headData.sn[2],gSectorBuff[i].headData.sn[3]);
+            log_d("add = %d,id =%x\r\n",addr,gSectorBuff[i].headData.id);
         }
 
         //6.写入到存储区域
@@ -430,7 +431,106 @@ uint8_t addHead(uint8_t *head,uint8_t mode)
   
 }
 
-#if 0
+#endif
+
+#ifndef QUEUE_ADD_CARD
+uint8_t addCard(uint8_t *head,uint8_t mode)
+{
+    uint8_t multiple = 0;
+	uint16_t remainder = 0;
+	uint32_t addr = 0;
+	uint8_t ret = 0;
+	uint32_t curIndex = 0;
+
+    HEADINFO_STRU tmpCard;
+
+    int32_t iTime1, iTime2;
+
+    log_d("head %02x,%02x,%02x,%02x\r\n",head[0],head[1],head[2],head[3]);   
+
+    if(!head)
+    {
+        return 0;
+    }
+
+    memcpy(tmpCard.headData.sn,head,CARD_NO_LEN_BCD);
+
+    
+   iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
+   //1.先判定当前有多少个卡号;
+    ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
+
+	if ( mode == CARD_MODE )
+	{
+		addr = CARD_NO_HEAD_ADDR;
+		curIndex = gRecordIndex.cardNoIndex;
+	}
+	else if ( mode == CARD_DEL_MODE )
+	{
+		addr = CARD_DEL_HEAD_ADDR;
+		curIndex = gRecordIndex.delCardNoIndex;		
+	}
+   
+    
+    multiple = curIndex / HEAD_NUM_SECTOR;
+    remainder = curIndex % HEAD_NUM_SECTOR;
+
+//    log_d("mode = %d,addr = %x,multiple = %d,remainder=%d\r\n",mode,addr,multiple,remainder);
+
+
+    //索引要从1开始    
+    if(multiple==0 && remainder==0)
+    {
+        //第一条记录
+        log_d("<<<<<write first recond>>>>>\r\n");
+        
+        //写入到存储区域
+        SPI_FLASH_BufferWrite(&tmpCard, addr,1*sizeof(HEADINFO_STRU));        
+    }
+    else 
+    {
+        //2.追加到最后一页最后一条；
+        addr += (multiple * HEAD_NUM_SECTOR + remainder)  * sizeof(HEADINFO_STRU);
+        SPI_FLASH_BufferWrite(&tmpCard, addr,1*sizeof(HEADINFO_STRU));
+
+        //3.判断是否写满一页，是的话，排序
+        if(remainder == HEAD_NUM_SECTOR-1)
+        {  
+            //读一页数据
+            SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+            //排序
+            qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
+            //写回数据
+            SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+        }
+    }
+
+
+	if ( mode == CARD_MODE )
+	{
+        gRecordIndex.cardNoIndex++;
+	}
+	else if ( mode == CARD_DEL_MODE )
+	{
+        gRecordIndex.delCardNoIndex++;		
+	}
+
+
+//    log_d("cardNoIndex = %d,userIdIndex = %d\r\n",gRecordIndex.cardNoIndex,gRecordIndex.userIdIndex);	
+    optRecordIndex(&gRecordIndex,WRITE_PRARM);
+
+	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
+	log_d ( "add head成功，耗时: %dms\r\n",iTime2 - iTime1 );
+
+    return 1;
+  
+}
+
+
+#endif
+
+#ifdef CARD_AND_FLASH
 uint8_t addHeadID(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
@@ -837,6 +937,49 @@ void qSort(void *dataBuff,uint32_t low,uint32_t high)
 void qSortCard(HEADINFO_STRU *head,uint32_t length)
 {
     qSort(head,0,length-1);
+}
+
+void sortLastPageCard(void)
+{
+    uint8_t multiple = 0;
+	uint16_t remainder = 0;
+	
+	uint32_t addr = 0;
+	uint8_t ret = 0;
+
+    int32_t iTime1, iTime2;
+    
+    iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
+   
+   //1.先判定当前有多少个卡号;
+    ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
+    
+	addr = CARD_NO_HEAD_ADDR;    
+    multiple = gRecordIndex.cardNoIndex / HEAD_NUM_SECTOR;
+    remainder = gRecordIndex.cardNoIndex % HEAD_NUM_SECTOR;
+
+    memset(gSectorBuff,0x00,sizeof(gSectorBuff));
+    
+    //2.计算最后一页地址
+    addr += multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);    
+
+    //3.读取最后一页
+    SPI_FLASH_BufferRead(gSectorBuff, addr, (remainder)* sizeof(HEADINFO_STRU));
+    
+    //5.排序        
+    qSortCard(gSectorBuff,remainder);
+
+    for(int i=0;i<remainder;i++)
+    {
+        log_d("add = %d,id =%x\r\n",addr,gSectorBuff[i].headData.id);
+    }   
+
+    SPI_FLASH_BufferWrite(gSectorBuff, addr, (remainder)* sizeof(HEADINFO_STRU));
+
+
+	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
+	log_d ( "sort last page card success，use time: %dms\r\n",iTime2 - iTime1 );  
 }
 
 

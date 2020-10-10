@@ -60,6 +60,7 @@ typedef struct
     uint8_t cardID[CARD_ID_LEN];           //需要发送给服务器的数据
                                            //最后一个字节 =0 DISABLE 禁止发送; = 1 ENABLE 允许发送
     uint8_t devID;                          // = 1 1号读卡器；=2 2号读卡器
+    uint8_t mode;                           // = 1 读卡
 }READER_BUFF_STRU;
 #pragma pack()
 

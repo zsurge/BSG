@@ -33,7 +33,13 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 #define  QUEUE_LEN    10     /* 队列的长度，最大可包含多少个消息 */
-    
+#define  CARD_QUEUE_LEN    20     /* 队列的长度，最大可包含多少个消息 */
+
+#define READER1         1           
+#define READER2         2
+
+#define READMODE        1 
+#define DOWNLOAD_CARD_MODE 2
     
 //事件标志
 #define TASK_BIT_0	 (1 << 0)
@@ -71,7 +77,6 @@ extern SemaphoreHandle_t gxMutex;
 extern QueueHandle_t xCmdQueue; 
 extern QueueHandle_t xCardIDQueue; 
 
-extern SemaphoreHandle_t CountSem_Handle;
 
 extern CMD_BUFF_STRU gCmd_buff;
 

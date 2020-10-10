@@ -30,6 +30,8 @@
  *----------------------------------------------*/
 typedef enum {
     NO_ERR = 1,
+    //队列错误代码
+    QUEUE_FULL_ERR,
     //系统异常类错误代码
     CMD_EMPTY_ERR,
     STR_EMPTY_ERR,

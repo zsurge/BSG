@@ -78,7 +78,7 @@ static void my_mem_init(void)
     my_mem_init();                  //对内存进行初始化
 
   /* CmBacktrace initialize */
-   cm_backtrace_init("SingleDoorApp", HARDWARE_VERSION, SOFTWARE_VERSION);
+//   cm_backtrace_init("SingleDoorApp", HARDWARE_VERSION, SOFTWARE_VERSION);
 
 }
 

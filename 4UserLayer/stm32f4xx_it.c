@@ -65,7 +65,7 @@ void NMI_Handler(void)
   * @retval None
   */
 
-#if 0  
+#if 1  
 void HardFault_Handler(void)
 {
     

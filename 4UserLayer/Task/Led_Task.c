@@ -74,7 +74,7 @@ static void vTaskLed(void *pvParameters)
 //    char rbuf[256] = {0};
 //    uint16_t i = 0;
     
-    Sound2(300);
+//    Sound2(300);
 
 
 //    for(i=0;i<256;i++)

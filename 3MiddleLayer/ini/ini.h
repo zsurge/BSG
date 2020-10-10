@@ -123,7 +123,6 @@ uint8_t optDevBaseParam(void *stParam,uint8_t mode,uint32_t len,uint32_t addr);
 void initRecordIndex(void);
 uint8_t optRecordIndex(RECORDINDEX_STRU *recoIndex,uint8_t mode);
 
-
 void ClearDevBaseParam(void);
 void ClearTemplateParam(void);
 void ClearRecordIndex(void);

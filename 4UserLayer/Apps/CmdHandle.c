@@ -39,6 +39,7 @@
 #include "bsp_ds1302.h"
 #include "LocalData.h"
 #include "deviceInfo.h"
+#include "bsp_time.h"
 
 
 					
@@ -171,25 +172,27 @@ static SYSERRORCODE_E SendToQueue(uint8_t *buf,int len,uint8_t authMode)
 {
     SYSERRORCODE_E result = NO_ERR;
 
-    READER_BUFF_STRU *ptQR = &gReaderMsg;
+    READER_BUFF_STRU *ptMsg = &gReaderMsg;
     
 	/* 清零 */
-    ptQR->devID = authMode; 
-    memset(ptQR->cardID,0x00,sizeof(ptQR->cardID)); 
+    ptMsg->mode = authMode; 
+    memset(ptMsg->cardID,0x00,sizeof(ptMsg->cardID)); 
+    memcpy(ptMsg->cardID,buf,len);
 
     
     /* 使用消息队列实现指针变量的传递 */
     if(xQueueSend(xCardIDQueue,              /* 消息队列句柄 */
-                 (void *) &ptQR,   /* 发送指针变量recv_buf的地址 */
-                 (TickType_t)300) != pdPASS )
+                 (void *) &ptMsg,   /* 发送指针变量recv_buf的地址 */
+                 (TickType_t)30) != pdPASS )
     {
         DBG("the queue is full!\r\n");                
         xQueueReset(xCardIDQueue);
+        result = QUEUE_FULL_ERR;
     } 
     else
     {
-        //dbh("SendToQueue",(char *)buf,len);
-        log_d("SendToQueue buf = %s,len = %d\r\n",buf,len);
+        dbh("SendToQueue",(char *)buf,len);
+//        log_d("SendToQueue buf = %s,len = %d\r\n",buf,len);
     } 
 
 
@@ -288,7 +291,7 @@ SYSERRORCODE_E OpenDoor ( uint8_t* msgBuf )
         return STR_EMPTY_ERR;
     }
     
-    result = modifyJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"status","1",1,buf);
+    result = modifyJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"openStatus","1",1,buf);
 
     if(result != NO_ERR)
     {
@@ -349,7 +352,7 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
     
     log_d("add cardNo=  %02x, %02x, %02x, %02x\r\n",cardNo[0],cardNo[1],cardNo[2],cardNo[3]);
     
-    ret = addHead(cardNo,CARD_MODE);  
+    ret = addCard(cardNo,CARD_MODE);  
 
     if(ret == 1)
     {
@@ -815,8 +818,10 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         
         return STR_EMPTY_ERR;
     } 
- 
 
+    gCardSortTimer.flag = 1;
+    gCardSortTimer.cardSortTimer = 60000;
+    
     //2.保存卡号
     cardArray = GetCardArray ((const uint8_t *)msgBuf,(const uint8_t *)"cardNo",&multipleCardNum);
 
@@ -842,26 +847,26 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
     {
         log_d("%d / %d :cardNo = %s\r\n",multipleCardNum,i+1,cardArray[i]);      
         memset(tmp,0x00,sizeof(tmp));
-        asc2bcd(tmp, cardArray[i], CARD_NO_LEN, 1);
-        
+        asc2bcd(tmp, cardArray[i], CARD_NO_LEN, 1);        
         tmp[0] = 0x00;//韦根26最高位无数据
+//        dbh("tmp card", tmp, CARD_NO_BCD_LEN);
         
-//        log_d("cardNo: %02x %02x %02x %02x\r\n",tmp[0],tmp[1],tmp[2],tmp[3]);
+        result = SendToQueue(tmp,CARD_NO_BCD_LEN,2);
 
-        ret = addHead(tmp,CARD_MODE);
-        
-        if(ret != 1)
-        {
-            for (i = 0; i < 20; i++)
-            {
-                my_free(cardArray[i]);
-            }   
-            my_free(cardArray);
-            
-            result = FLASH_W_ERR;
+//        ret = addCard(tmp,CARD_MODE);
+//        
+//        if(ret != 1)
+//        {
+//            for (i = 0; i < 20; i++)
+//            {
+//                my_free(cardArray[i]);
+//            }   
+//            my_free(cardArray);
+//            
+//            result = FLASH_W_ERR;
 
-            log_e("add head error\r\n");
-        }  
+//            log_e("add head error\r\n");
+//        }  
 
         memset(buf,0x00,sizeof(buf));    
         if(result == NO_ERR)

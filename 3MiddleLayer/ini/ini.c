@@ -569,7 +569,7 @@ void initDevBaseParam(void)
     if(gDevBaseParam.deviceCode.downLoadFlag.iFlag != DEFAULT_INIVAL)
 	{	
 	    log_d("wirte default base data\r\n");
-	    ClearDevBaseParam();
+	    ClearDevBaseParam();    
 	    
         //设备状态为启用状态
         gDevBaseParam.deviceState.iFlag = DEVICE_ENABLE;     
@@ -615,10 +615,6 @@ uint8_t optDevBaseParam(void *stParam,uint8_t mode,uint32_t len,uint32_t addr)
     return opParam(stParam,mode,len,addr); 
 }
 
-
-
-
-
 void initRecordIndex(void)
 {
     uint8_t ret = 1;    
@@ -634,8 +630,7 @@ void initRecordIndex(void)
 
     log_d("gCurCardHeaderIndex = %d\r\n",gRecordIndex.cardNoIndex);
     log_d("gDelCardHeaderIndex = %d\r\n",gRecordIndex.delCardNoIndex);
-    
-
+  
 	log_d("init param success\r\n");
 }
 
@@ -792,11 +787,9 @@ void TestFlash ( uint8_t mode )
         memset ( &tmp,0x00,sizeof ( HEADINFO_STRU ) );
 		memset ( buff,0x00,sizeof ( buff ) );		
 		
-        SPI_FLASH_BufferRead(&tmp, addr+i*sizeof ( HEADINFO_STRU ), sizeof(HEADINFO_STRU));
-		
-		bcd2asc ( ( uint8_t* ) buff, tmp.headData.sn, CARD_NO_LEN_ASC, 0 );
+        SPI_FLASH_BufferRead(&tmp, addr+i*sizeof ( HEADINFO_STRU ), sizeof(HEADINFO_STRU));		
 
-		log_d("card%d = %s\r\n ",i,buff);
+		log_d("card%d = %x,sn = %02x,%02x,%02x,%02x\r\n ",i,tmp.headData.id,tmp.headData.sn[0],tmp.headData.sn[1],tmp.headData.sn[2],tmp.headData.sn[3]);
 	}
 
 //	for ( i=0; i<num; i++ )
@@ -809,6 +802,21 @@ void TestFlash ( uint8_t mode )
 //	}
 
 }
+
+//void setCardSortFlag(uint8_t mode)
+//{
+//    ClearRecordIndex();
+//    optRecordIndex(&gRecordIndex,READ_PRARM);
+//    if(mode == CARD_UNORDERED)
+//    {
+//        gRecordIndex.sortFlag.iFlag = CARD_UNORDERED;
+//    }
+//    else
+//    {
+//        gRecordIndex.sortFlag.iFlag = CARD_UNORDERED;        
+//    }
+//    optRecordIndex(&gRecordIndex,WRITE_PRARM);
+//}
 
 
 
