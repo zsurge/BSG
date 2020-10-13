@@ -765,8 +765,6 @@ void TestFlash ( uint8_t mode )
 	
 	ClearRecordIndex();
     optRecordIndex(&gRecordIndex,READ_PRARM);
-    
-
 
 	if ( mode == CARD_MODE )
 	{

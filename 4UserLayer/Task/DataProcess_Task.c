@@ -99,13 +99,14 @@ static void vTaskDataProcess(void *pvParameters)
         if(pdTRUE != xReturn)
         {  
             //没有接收到数据
-            //队列满
+            //队列满            
             continue;
         }
 
         //消息接收成功，发送接收到的消息                
         log_d("cardid %02x,%02x,%02x,%02x,devid = %d,mode = %d\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3],ptMsg->devID,ptMsg->mode);
-
+    
+        log_d("======vTaskDataProcess mem perused = %3d%======\r\n",mem_perused(SRAMIN));
         if(ptMsg->mode == DOWNLOAD_CARD_MODE)
         {
             ret = addCard(ptMsg->cardID,CARD_MODE);

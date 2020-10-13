@@ -102,7 +102,7 @@
 //    char accessFloor[FLOOR_ARRAY_LEN+1];           //权限楼层
 //}QRCODE_INFO_STRU;
 
-#pragma pack()
+//#pragma pack()
 
 //extern LOCAL_USER_STRU gLoalUserData;
 
@@ -134,7 +134,9 @@ SYSERRORCODE_E saveUpgradeData(uint8_t *jsonBuff);
 SYSERRORCODE_E getTimePacket(uint8_t *descBuf);
 
 //获取JSON数组
-uint8_t** GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num);
+//uint8_t** GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num);
+void GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num,uint8_t descBuff[][8]);
+
 
 
 

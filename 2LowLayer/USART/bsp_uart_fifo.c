@@ -544,6 +544,14 @@ void RS485_InitTXE(void)
 
     #if UART3_RS485_EN == 1
 
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);	/* 打开GPIO时钟 */
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;		/* 设为输出口 */
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;		/* 设为推挽 */
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 无上拉电阻 */
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;	/* IO口最大速度 */
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);       
+
     #endif
 
     #if UART4_RS485_EN == 1
@@ -551,13 +559,7 @@ void RS485_InitTXE(void)
     #endif    
 
     #if UART5_RS485_EN == 1
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOG, ENABLE);	/* 打开GPIO时钟 */
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;		/* 设为输出口 */
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;		/* 设为推挽 */
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;	/* 无上拉电阻 */
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;	/* IO口最大速度 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);   
+
     #endif
 
     #if UART6_RS485_EN == 1
@@ -598,6 +600,7 @@ void RS485_SendBefor(void)
     #endif
 
     #if UART3_RS485_EN == 1
+    RS485_U3_TX_EN();/* 切换RS485收发芯片为发送模式 */    
 
     #endif
 
@@ -606,7 +609,6 @@ void RS485_SendBefor(void)
     #endif    
 
     #if UART5_RS485_EN == 1
-    RS485_U5_TX_EN();/* 切换RS485收发芯片为发送模式 */    
     
     #endif
 
@@ -635,6 +637,7 @@ void RS485_SendOver(void)
     #endif
 
     #if UART3_RS485_EN == 1
+    RS485_U3_RX_EN(); /* 切换RS485收发芯片为接收模式 */    
 
     #endif
 
@@ -643,7 +646,6 @@ void RS485_SendOver(void)
     #endif    
 
     #if UART5_RS485_EN == 1
-    RS485_U5_RX_EN(); /* 切换RS485收发芯片为接收模式 */    
     
     #endif
 
@@ -781,9 +783,9 @@ static void UartVarInit(void)
 	g_tUart3.usRxRead = 0;						/* 接收FIFO读索引 */
 	g_tUart3.usRxCount = 0;						/* 接收到的新数据个数 */
 	g_tUart3.usTxCount = 0;						/* 待发送的数据个数 */
-	g_tUart3.SendBefor = 0;		                /* 发送数据前的回调函数 */
-	g_tUart3.SendOver = 0;			            /* 发送完毕后的回调函数 */
-	g_tUart3.ReciveNew = 0;		                /* 接收到新数据后的回调函数 */
+	g_tUart3.SendBefor = RS485_SendBefor;		                /* 发送数据前的回调函数 */
+	g_tUart3.SendOver = RS485_SendOver;			            /* 发送完毕后的回调函数 */
+	g_tUart3.ReciveNew = RS485_ReciveNew;		                /* 接收到新数据后的回调函数 */
 #endif
 
 #if UART4_FIFO_EN == 1
@@ -815,9 +817,9 @@ static void UartVarInit(void)
 	g_tUart5.usRxRead = 0;						/* 接收FIFO读索引 */
 	g_tUart5.usRxCount = 0;						/* 接收到的新数据个数 */
 	g_tUart5.usTxCount = 0;						/* 待发送的数据个数 */
-	g_tUart5.SendBefor = RS485_SendBefor;						/* 发送数据前的回调函数 */
-	g_tUart5.SendOver = RS485_SendOver;						/* 发送完毕后的回调函数 */
-	g_tUart5.ReciveNew = RS485_ReciveNew;						/* 接收到新数据后的回调函数 */
+	g_tUart5.SendBefor = 0;						/* 发送数据前的回调函数 */
+	g_tUart5.SendOver = 0;						/* 发送完毕后的回调函数 */
+	g_tUart5.ReciveNew = 0;						/* 接收到新数据后的回调函数 */
 #endif
 
 

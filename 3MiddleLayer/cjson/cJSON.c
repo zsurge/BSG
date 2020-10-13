@@ -58,21 +58,6 @@
 #include "cJSON.h"
 #include "malloc.h"
 
-//void *my_malloc(u32 size)
-//{
-//	return (void*)mymalloc(SRAMIN, size);
-//}
-
-//void my_free(void *ptr)
-//{
-//	myfree(SRAMIN, ptr);
-//}
-
-//void *my_realloc(void *ptr,u32 size)
-//{
-//	return (void*)myrealloc(SRAMIN, ptr, size);
-//}
-
 /* define our own boolean type */
 #ifdef true
 #undef true
@@ -152,19 +137,27 @@ typedef struct internal_hooks
 static void * CJSON_CDECL internal_malloc(size_t size)
 {
     return my_malloc(size);
+//    return cjson_malloc(size);
 }
 static void CJSON_CDECL internal_free(void *pointer)
 {
     my_free(pointer);
+    
+//    cjson_free(pointer);
 }
 static void * CJSON_CDECL internal_realloc(void *pointer, size_t size)
 {
     return my_realloc(pointer, size);
+    
+//    return cjson_realloc(pointer, size);
 }
 #else
 #define internal_malloc my_malloc
 #define internal_free my_free
 #define internal_realloc my_realloc
+//#define internal_malloc cjson_malloc
+//#define internal_free cjson_free
+//#define internal_realloc cjson_realloc
 #endif
 
 /* strlen of character literals resolved at compile time */
@@ -201,16 +194,24 @@ CJSON_PUBLIC(void) cJSON_InitHooks(cJSON_Hooks* hooks)
         global_hooks.allocate = my_malloc;
         global_hooks.deallocate = my_free;
         global_hooks.reallocate = my_realloc;
+
+//        global_hooks.allocate = cjson_malloc;
+//        global_hooks.deallocate = cjson_free;
+//        global_hooks.reallocate = cjson_realloc;        
         return;
     }
 
     global_hooks.allocate = my_malloc;
+//    global_hooks.allocate = cjson_malloc;
+
     if (hooks->malloc_fn != NULL)
     {
         global_hooks.allocate = hooks->malloc_fn;
     }
 
     global_hooks.deallocate = my_free;
+//    global_hooks.deallocate = cjson_free;
+
     if (hooks->free_fn != NULL)
     {
         global_hooks.deallocate = hooks->free_fn;
@@ -222,6 +223,11 @@ CJSON_PUBLIC(void) cJSON_InitHooks(cJSON_Hooks* hooks)
     {
         global_hooks.reallocate = my_realloc;
     }
+
+//    if ((global_hooks.allocate == cjson_malloc) && (global_hooks.deallocate == cjson_free))
+//    {
+//        global_hooks.reallocate = cjson_realloc;
+//    }    
 }
 
 /* Internal constructor. */

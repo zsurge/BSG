@@ -185,3 +185,19 @@ void *my_realloc(void *ptr,u32 size)
 	return (void*)myrealloc(SRAMIN, ptr, size);
 }
 
+//void *cjson_malloc(u32 size)
+//{
+//	return (void*)malloc(size);
+//}
+
+//void cjson_free(void *ptr)
+//{
+//	free(ptr);
+//}
+
+//void *cjson_realloc(void *ptr,u32 size)
+//{
+//	return (void*)realloc(ptr, size);
+//}
+
+

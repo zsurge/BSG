@@ -294,7 +294,7 @@ static int Bin_Search(HEADINFO_STRU *num,int numsSize,int target)
 
 
 
-#ifdef RELEASE
+#if 0//RELEASE
 uint8_t addCard(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
@@ -433,7 +433,7 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
 
 #endif
 
-#ifndef QUEUE_ADD_CARD
+#if 1//#ifndef QUEUE_ADD_CARD
 uint8_t addCard(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
@@ -476,9 +476,6 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
     multiple = curIndex / HEAD_NUM_SECTOR;
     remainder = curIndex % HEAD_NUM_SECTOR;
 
-//    log_d("mode = %d,addr = %x,multiple = %d,remainder=%d\r\n",mode,addr,multiple,remainder);
-
-
     //索引要从1开始    
     if(multiple==0 && remainder==0)
     {
@@ -494,16 +491,22 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
         addr += (multiple * HEAD_NUM_SECTOR + remainder)  * sizeof(HEADINFO_STRU);
         SPI_FLASH_BufferWrite(&tmpCard, addr,1*sizeof(HEADINFO_STRU));
 
+        log_d("add = %d,multiple = %d,remainder=%d\r\n",addr,multiple,remainder);
+        
+
         //3.判断是否写满一页，是的话，排序
-        if(remainder == HEAD_NUM_SECTOR-1)
+        if((remainder == HEAD_NUM_SECTOR-1) &&(remainder%(HEAD_NUM_SECTOR-1)==0))
         {  
+            log_d("@@@@@@@@@@start sort@@@@@@@@@@\r\n");
             //读一页数据
             SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
             //排序
             qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
             //写回数据
             SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+            log_d("@@@@@@@@@@end sort@@@@@@@@@@\r\n");
         }
+       
     }
 
 
@@ -515,10 +518,8 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
 	{
         gRecordIndex.delCardNoIndex++;		
 	}
-
-
-//    log_d("cardNoIndex = %d,userIdIndex = %d\r\n",gRecordIndex.cardNoIndex,gRecordIndex.userIdIndex);	
-    optRecordIndex(&gRecordIndex,WRITE_PRARM);
+	
+	optRecordIndex(&gRecordIndex,WRITE_PRARM);
 
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
 	log_d ( "add head成功，耗时: %dms\r\n",iTime2 - iTime1 );

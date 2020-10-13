@@ -24,7 +24,7 @@
 #include "elog.h"
 
 #include "led_task.h"
-#include "spi_flash.h" 
+//#include "spi_flash.h" 
 #include "bsp_led.h"
 #include "bsp_beep.h"
 #include "bsp_dipSwitch.h"
@@ -34,7 +34,7 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 #define LED_TASK_PRIO	    (tskIDLE_PRIORITY)
-#define LED_STK_SIZE 		(configMINIMAL_STACK_SIZE*2)
+#define LED_STK_SIZE 		(configMINIMAL_STACK_SIZE)
 
 /*----------------------------------------------*
  * 常量定义                                     *
@@ -133,10 +133,10 @@ static void vTaskLed(void *pvParameters)
 
 		/* 发送事件标志，表示任务正常运行 */        
 		xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_0);  
-//        vTaskDelay(1000); 
+        vTaskDelay(1000); 
 
 //        SW2_HI();
-        vTaskDelay(1000);    
+//        vTaskDelay(1000);    
     }
 } 
 

@@ -86,7 +86,7 @@ static void vTaskHandShake(void *pvParameters)
 
     //读取模板数据
 
-    //eraseUserDataAll();
+//    eraseUserDataAll();
     
     initRecordIndex();
     

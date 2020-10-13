@@ -1,6 +1,7 @@
 #ifndef _MALLOC_H
 #define _MALLOC_H
 #include "sys.h"
+#include <stdlib.h>
 
 #ifndef NULL
 #define NULL 0
@@ -16,7 +17,7 @@
 
 //mem1内存参数设定,mem1完全处于内部SRAM里面
 #define MEM1_BLOCK_SIZE	32  			//内存块大小为32字节
-#define MEM1_MAX_SIZE		60*1024 	//最大管理内存 110k
+#define MEM1_MAX_SIZE		58*1024 	//最大管理内存 110k
 #define MEM1_ALLOC_TABLE_SIZE MEM1_MAX_SIZE/MEM1_BLOCK_SIZE  //内存表大小
 
 //mem2内存参数设定,mem2处于外部SRAM里面
@@ -55,6 +56,12 @@ void *myrealloc(u8 memx,void *ptr,u32 size);//重新分配内存(外部调用)
 void *my_malloc(u32 size);
 void my_free(void *ptr);
 void *my_realloc(void *ptr,u32 size);
+
+
+//void *cjson_malloc(u32 size);
+//void cjson_free(void *ptr);
+//void *cjson_realloc(void *ptr,u32 size);
+
 
 
 

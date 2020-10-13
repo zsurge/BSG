@@ -40,18 +40,18 @@
 /* 定义使能的串口, 0 表示不使能（不增加代码大小）， 1表示使能 */
 #define	UART1_FIFO_EN	1
 #define	UART2_FIFO_EN	1
-#define	UART3_FIFO_EN	0
+#define	UART3_FIFO_EN	1
 #define	UART4_FIFO_EN	0
-#define	UART5_FIFO_EN	1
+#define	UART5_FIFO_EN	0
 #define	UART6_FIFO_EN	0
 
 
 /* 定义使能的485接口, 0 表示不使能（不增加代码大小）， 1表示使能 */
 #define UART1_RS485_EN	0
 #define	UART2_RS485_EN	1
-#define	UART3_RS485_EN	0
+#define	UART3_RS485_EN	1
 #define	UART4_RS485_EN	0
-#define	UART5_RS485_EN	1
+#define	UART5_RS485_EN	0
 #define	UART6_RS485_EN	0
 
 
@@ -59,8 +59,8 @@
 #define RS485_U2_RX_EN()	    GPIOG->BSRRH = GPIO_Pin_9
 #define RS485_U2_TX_EN()	    GPIOG->BSRRL = GPIO_Pin_9
 
-#define RS485_U5_RX_EN()	    GPIOD->BSRRH = GPIO_Pin_7
-#define RS485_U5_TX_EN()	    GPIOD->BSRRL = GPIO_Pin_7
+#define RS485_U3_RX_EN()	    GPIOD->BSRRH = GPIO_Pin_7
+#define RS485_U3_TX_EN()	    GPIOD->BSRRL = GPIO_Pin_7
 
 
 /* 定义端口号 */
@@ -88,9 +88,9 @@ typedef enum
 #endif
 
 #if UART3_FIFO_EN == 1
-	#define UART3_BAUD			38400
-	#define UART3_TX_BUF_SIZE	1*1024
-	#define UART3_RX_BUF_SIZE	1*1024
+	#define UART3_BAUD			9600
+	#define UART3_TX_BUF_SIZE	1*512
+	#define UART3_RX_BUF_SIZE	1*512
 #endif
 
 #if UART4_FIFO_EN == 1

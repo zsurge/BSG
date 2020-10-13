@@ -110,6 +110,7 @@ static void AppTaskCreate (void)
 
     //¶Á¿¨Æ÷
 //    CreateReaderTask();
+    
     CreateRs485ReaderTask();
 
 

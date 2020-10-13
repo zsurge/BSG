@@ -114,7 +114,7 @@ static uint8_t parseReader(void)
     while(1)
     {    
         //读取485数据，若是没读到，退出，再重读
-        if(!RS485_Recv(COM5,&ch,1))
+        if(!RS485_Recv(COM3,&ch,1))
         {            
             return UNFINISHED;
         }
