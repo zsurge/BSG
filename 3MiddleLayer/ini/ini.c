@@ -653,7 +653,7 @@ uint8_t optRecordIndex(RECORDINDEX_STRU *recoIndex,uint8_t mode)
     {
         memcpy(buff,recoIndex,sizeof(RECORDINDEX_STRU));   
 
-        log_d("write index %d,%d\r\n",recoIndex->cardNoIndex,recoIndex->delCardNoIndex);
+        log_d("write index %d,%d,%d\r\n",recoIndex->cardNoIndex,recoIndex->delCardNoIndex,recoIndex->accessRecoIndex);
         
 //    	ret = FRAM_Write ( FM24V10_1, RECORD_INDEX_ADDR, buff,sizeof(RECORDINDEX_STRU) );
 //    	if ( ret == 0 )
@@ -740,12 +740,21 @@ void eraseHeadSector ( void )
 void eraseDataSector ( void )
 {
 	uint16_t i = 0;
+	uint16_t num = 0;
+	
+	ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
 
-	for ( i=0; i<DATA_SECTOR_NUM; i++ )
+    num = gRecordIndex.accessRecoIndex * RECORD_MAX_LEN/SECTOR_SIZE + 1;
+
+	for ( i=0; i<num; i++ )
 	{
-		bsp_sf_EraseSector ( CARD_NO_DATA_ADDR+i*SECTOR_SIZE );
-		bsp_sf_EraseSector ( USER_ID_DATA_ADDR+i*SECTOR_SIZE );
+		bsp_sf_EraseSector ( ACCESS_RECORD_ADDR+i*SECTOR_SIZE );
 	}
+
+    gRecordIndex.accessRecoIndex = 0;
+    
+    optRecordIndex(&gRecordIndex,WRITE_PRARM);	
 }
 
 void TestFlash ( uint8_t mode )
@@ -769,7 +778,6 @@ void TestFlash ( uint8_t mode )
 	if ( mode == CARD_MODE )
 	{
 		addr = CARD_NO_HEAD_ADDR;
-		data_addr = CARD_NO_DATA_ADDR;
 		num = gRecordIndex.cardNoIndex;
 	}
 

@@ -60,7 +60,7 @@ static void swap(uint32_t *x, uint32_t *y);
 static int selectPivotMedianOfThree(uint32_t *arr,uint32_t low,uint32_t high);
 static void insertSort(uint32_t *arr, uint32_t m, uint32_t n);
 static void qSort(void *dataBuff,uint32_t low,uint32_t high);
-
+static void optAccessIndex(uint8_t mode);
 static uint8_t checkFlashSpace ( uint8_t mode )
 {
 	if ( mode == CARD_MODE )
@@ -112,7 +112,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 
 	memcpy(head.headData.sn,headBuff,sizeof(head.headData.sn));
 
-    log_d("wang find head.headData.id = %x,sn = %02x,%02x,%02x,%02x\r\n",head.headData.id,head.headData.sn[0],head.headData.sn[1],head.headData.sn[2],head.headData.sn[3]);
+    log_d("want find head.headData.id = %x,sn = %02x,%02x,%02x,%02x\r\n",head.headData.id,head.headData.sn[0],head.headData.sn[1],head.headData.sn[2],head.headData.sn[3]);
 	
 
     ClearRecordIndex();
@@ -157,17 +157,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 //    }    
     
     log_d("head = %x,last page %x,%x\r\n",head.headData.id,gSectorBuff[0].headData.id,gSectorBuff[remainder-1].headData.id);
-    
-    if(ret == 0)
-    {
-        log_e("read fram error\r\n");
-        return NO_FIND_HEAD;       
-
-    }   
-    
-    log_d("head = %x,last page %x,%x\r\n",head.headData.id,gSectorBuff[0].headData.id,gSectorBuff[remainder-1].headData.id);
-
-    
+ 
     if((head.headData.id >= gSectorBuff[0].headData.id) && (head.headData.id <= gSectorBuff[remainder-1].headData.id))
     {
     
@@ -184,6 +174,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
     
     for(i=0;i<multiple;i++)
     {
+        address = CARD_NO_HEAD_ADDR;//从零开始读;
         address += i * HEAD_NUM_SECTOR  * CARD_USER_LEN;
         
         //2.读取第一个卡号和最后一个卡号；
@@ -195,12 +186,15 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 //            log_e("read fram error\r\n");
 //            return NO_FIND_HEAD; 
 //        }  
+        log_d("head = %x,the %d page,addr = %x, first value =%x,last value=%x\r\n",head.headData.id,i,address,gSectorBuff[0].headData.id,gSectorBuff[HEAD_NUM_SECTOR-1].headData.id);
         
         if(head.headData.id >= gSectorBuff[0].headData.id && head.headData.id <= gSectorBuff[HEAD_NUM_SECTOR-1].headData.id)
         {
             ret = Bin_Search(gSectorBuff,HEAD_NUM_SECTOR,head.headData.id);
             if(ret != NO_FIND_HEAD)
             {
+            	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
+            	log_d ( "find it，use %d ms\r\n",iTime2 - iTime1 );                
                 return ret;
             }
         }
@@ -208,7 +202,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
     }
 
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
-	log_d ( "read Head success，use %d ms\r\n",iTime2 - iTime1 );    
+	log_d ( "read all Head，use %d ms\r\n",iTime2 - iTime1 );    
 
     return NO_FIND_HEAD;
 
@@ -497,14 +491,12 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
         //3.判断是否写满一页，是的话，排序
         if((remainder == HEAD_NUM_SECTOR-1) &&(remainder%(HEAD_NUM_SECTOR-1)==0))
         {  
-            log_d("@@@@@@@@@@start sort@@@@@@@@@@\r\n");
             //读一页数据
             SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
             //排序
             qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
             //写回数据
             SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
-            log_d("@@@@@@@@@@end sort@@@@@@@@@@\r\n");
         }
        
     }
@@ -981,6 +973,104 @@ void sortLastPageCard(void)
 
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
 	log_d ( "sort last page card success，use time: %dms\r\n",iTime2 - iTime1 );  
+}
+
+static void optAccessIndex(uint8_t mode)
+{
+    ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
+    
+    if(mode == INCREMENT)
+    {
+            gRecordIndex.accessRecoIndex++;
+    }
+    else if(mode == DECLINE && gRecordIndex.accessRecoIndex > 0)
+    {        
+        gRecordIndex.accessRecoIndex--;
+    }   
+    else
+    {
+        return;
+    }
+
+    optRecordIndex(&gRecordIndex,WRITE_PRARM);
+}
+
+
+//写通行记录
+uint8_t writeRecord(uint8_t *buf,int len)
+{
+    int ret = 0;
+    int addr = ACCESS_RECORD_ADDR;
+    uint8_t tmpBuf[RECORD_MAX_LEN] = {0};
+
+    ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
+
+    addr += gRecordIndex.accessRecoIndex * RECORD_MAX_LEN;
+    
+    log_d("writeRecord addr = %d,len = %d,buff = %s\r\n",addr,len,buf);   
+
+    ret = bsp_sf_WriteBuffer(buf,addr,len);
+
+    log_d("bsp_sf_WriteBuffer ret = %d\r\n",ret);
+
+    if(!ret)
+    {
+        return ret;//写FLASH失败
+    }
+    
+    memset(tmpBuf,0x00,sizeof(tmpBuf));
+    bsp_sf_ReadBuffer(tmpBuf,addr,len);
+    log_d("writeRecord = %s\r\n",tmpBuf);
+    
+    if(memcmp(tmpBuf,buf,len))
+    {        
+        return 0;//写FLASH失败
+    }
+    
+    optAccessIndex(INCREMENT);
+    return ret;
+}
+
+//读通行记录
+uint8_t readRecord(uint8_t *buf)
+{
+    int ret = 0;
+    int addr = ACCESS_RECORD_ADDR;
+    uint8_t rxBuf[RECORD_MAX_LEN] = {0};
+    uint8_t len = 0;
+    optAccessIndex(DECLINE);
+
+    addr += gRecordIndex.accessRecoIndex * RECORD_MAX_LEN;
+    
+    memset(rxBuf,0x00,sizeof(rxBuf));    
+    bsp_sf_ReadBuffer(rxBuf,addr,RECORD_MAX_LEN);
+
+    log_d("readRecord = %s\r\n",rxBuf);
+
+    if(strlen((const char*)rxBuf)>= RECORD_REAL_LEN)
+    {
+        len = RECORD_REAL_LEN;
+    }
+    else
+    {
+        len = 0;
+    }
+
+
+    log_d("readRecord rxBuf len = %d\r\n",strlen((const char*)rxBuf));
+    
+    memcpy(buf,rxBuf,RECORD_REAL_LEN);
+    
+    return len;
+}
+
+
+//清除通行记录
+void clearRecord(void)
+{
+    eraseDataSector();
 }
 
 

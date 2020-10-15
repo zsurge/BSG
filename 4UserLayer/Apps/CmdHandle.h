@@ -70,7 +70,7 @@ typedef struct
 extern READER_BUFF_STRU gReaderMsg,gReaderRecvMsg;
 
 
-extern int gConnectStatus;
+
 extern int gMySock;
 extern uint8_t gUpdateDevSn; 
 extern uint32_t gCurTick;

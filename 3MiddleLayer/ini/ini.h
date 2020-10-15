@@ -70,15 +70,16 @@
 #define DEVICE_TEMPLATE_PARAM_ADDR  (RECORD_INDEX_ADDR+RECORD_INDEX_SIZE) //参数存储分配4K空间
 
 
-
-#define CARD_NO_DATA_ADDR   0X500000
-#define USER_ID_DATA_ADDR   0X900000
-
-#define DATA_SECTOR_NUM     ((USER_ID_DATA_ADDR-CARD_NO_DATA_ADDR)/SECTOR_SIZE)
+//FLASH空间分配
+#define ACCESS_RECORD_ADDR       0x500000
+#define ACCESS_RECORD_ADDR_END   0x900000
+#define DATA_SECTOR_NUM          ((ACCESS_RECORD_ADDR_END-ACCESS_RECORD_ADDR)/SECTOR_SIZE)
 
 #define CARD_MODE                   1 //卡模式
 #define CARD_DEL_MODE               2 //删除卡模式
 #define NO_FIND_HEAD                (-1)
+#define RECORD_MAX_LEN              128 //每条退行记录的最大长度
+#define RECORD_REAL_LEN              125 //每条退行记录的真实长度
 
 
 //表头数据
@@ -94,9 +95,6 @@ typedef struct CARDHEADINFO
 }HEADINFO_STRU;
 
 extern HEADINFO_STRU gSectorBuff[1024];
-
-
-
 
 typedef uint8_t(*CallBackParam)(void * struParam,uint8_t mode,uint32_t len,uint32_t addr);
 

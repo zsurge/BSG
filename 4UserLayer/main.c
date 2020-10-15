@@ -109,9 +109,9 @@ static void AppTaskCreate (void)
 //    CreateKeyTask();
 
     //读卡器
-//    CreateReaderTask();
+    CreateReaderTask();
     
-    CreateRs485ReaderTask();
+//    CreateRs485ReaderTask();
 
 
     //卡数据处理

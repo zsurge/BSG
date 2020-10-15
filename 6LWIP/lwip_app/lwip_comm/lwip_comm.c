@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <time.h>
 #include "tool.h"
+#include "eth_cfg.h"
+
 
 __lwip_dev lwipdev;						//lwip控制结构体
 
@@ -276,6 +278,7 @@ void ETH_link_callback(struct netif *netif)
 	else
 	{
 		printf("<<<<<<<<<<<<<<<<link down>>>>>>>>>>>>>>>>> \r\n");
+		gConnectStatus = 0;//把联接标志置为失去联接
 		ETH_Stop();
 		#ifdef LWIP_DHCP
 			SetGB_DHCPState(DHCP_LINK_DOWN);

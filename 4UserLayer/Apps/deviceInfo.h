@@ -183,7 +183,8 @@ typedef struct DEV_BASE_PARAM
 typedef struct RECORDINDEX
 {
     volatile uint32_t cardNoIndex;      //当前已存储了多少个卡号
-    volatile uint32_t delCardNoIndex;   //当前已存储了多少个已删除的卡号
+    volatile uint32_t delCardNoIndex;   //当前已存储了多少个已删除的卡号    
+    volatile uint32_t accessRecoIndex;   //当前已存储了多少通行记录
 }RECORDINDEX_STRU;
 
 

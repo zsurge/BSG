@@ -40,8 +40,7 @@
 #include "LocalData.h"
 #include "deviceInfo.h"
 #include "bsp_time.h"
-
-
+#include "eth_cfg.h"
 					
 
 
@@ -90,6 +89,7 @@ static SYSERRORCODE_E SetLocalTime_Elevator( uint8_t* msgBuf );
 static SYSERRORCODE_E SetLocalSn( uint8_t* msgBuf ); //设置本地SN，MQTT用
 static SYSERRORCODE_E DelCardSingle( uint8_t* msgBuf ); //删除卡号
 static SYSERRORCODE_E getRemoteTime ( uint8_t* msgBuf );//获取远程服务器时间
+static SYSERRORCODE_E RemoteResetDev ( uint8_t* msgBuf );//远程重启
 
 //static SYSERRORCODE_E ReturnDefault ( uint8_t* msgBuf ); //返回默认消息
 
@@ -112,7 +112,8 @@ const CMD_HANDLE_T CmdList[] =
 	{"1016", UpgradeDev},
 	{"1017", UpgradeAck},
 	{"1026", GetDevInfo},  
-	{"1027", DelCardSingle},         
+	{"1027", DelCardSingle},  
+	{"2007", RemoteResetDev}, 
 	{"3001", SetLocalSn},
     {"3002", GetServerIp},
     {"3003", GetTemplateParam},
@@ -167,6 +168,15 @@ void Proscess(void* data)
     
     exec_proc (cmd ,data);
 }
+
+static SYSERRORCODE_E RemoteResetDev ( uint8_t* msgBuf )//远程重启
+{
+      
+      NVIC_SystemReset(); 
+      
+      return NO_ERR;
+}
+
 
 static SYSERRORCODE_E SendToQueue(uint8_t *buf,int len,uint8_t authMode)
 {
@@ -241,6 +251,7 @@ int mqttSendData(uint8_t *payload_out,uint16_t payload_out_len)
    else
    {
         log_d("MQTT Lost the connect!!!\r\n");
+        //这里需要写离线记录
    }
   
 
