@@ -296,6 +296,7 @@ SYSERRORCODE_E OpenDoor ( uint8_t* msgBuf )
 	SYSERRORCODE_E result = NO_ERR;
     uint8_t buf[MQTT_TEMP_LEN] = {0};
     uint16_t len = 0;
+    READER_BUFF_STRU *ptReaderBuf = &gReaderMsg;     
 
     if(!msgBuf)
     {
@@ -319,6 +320,21 @@ SYSERRORCODE_E OpenDoor ( uint8_t* msgBuf )
     log_d("gSectorBuff = %d\r\n",sizeof(gSectorBuff));
 
     log_d("======OpenDoor after = %3d%======\r\n",mem_perused(SRAMIN));
+    
+
+    ptReaderBuf->devID = READER1; 
+    ptReaderBuf->mode = REMOTE_OPEN_MODE;            
+
+	/* 使用消息队列实现指针变量的传递 */
+	if(xQueueSend(xCardIDQueue,             /* 消息队列句柄 */
+				 (void *) &ptReaderBuf,             /* 发送结构体指针变量ptReader的地址 */
+				 (TickType_t)10) != pdPASS )
+	{
+//                xQueueReset(xCardIDQueue);删除该句，为了防止在下发数据的时候刷卡
+        log_d("send REMOTE_OPEN_MODE!\r\n"); 
+        //发送卡号失败蜂鸣器提示
+        //或者是队列满                
+    }     
 
     TestFlash(CARD_MODE);
     
@@ -343,7 +359,7 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
 	SYSERRORCODE_E result = NO_ERR;
 
     uint8_t buf[MQTT_TEMP_LEN] = {0};
-    uint8_t tmp[CARD_USER_LEN] = {0};
+    uint8_t tmp[CARD_NO_LEN] = {0};    
     uint8_t cardNo[CARD_NO_BCD_LEN] = {0};
     uint16_t len = 0;  
     uint8_t ret = 0;
@@ -354,43 +370,46 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
         return STR_EMPTY_ERR;
     }
     
-
-    //2.保存卡号
+    log_d("AddCardNo = %s\r\n",msgBuf);
+    
+    //2.保存卡号    
     memset(tmp,0x00,sizeof(tmp));
     strcpy((char *)tmp,(const char *)GetJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"cardNo",1));
     log_d("cardNo = %s,len = %d\r\n",tmp,strlen((const char*)tmp));
     
  
     memset(cardNo,0x00,sizeof(cardNo));
-    asc2bcd(cardNo, tmp, CARD_USER_LEN, 1); 
+    asc2bcd(cardNo, tmp, CARD_NO_LEN, 1); 
 
     cardNo[0] = 0x00;//韦根26最高位无数据
     
     log_d("add cardNo=  %02x, %02x, %02x, %02x\r\n",cardNo[0],cardNo[1],cardNo[2],cardNo[3]);
-    
-    ret = addCard(cardNo,CARD_MODE);  
 
-    if(ret == 1)
-    {
-        //影响服务器
-        result = modifyJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"status","1",1,buf);
-    }
-    else
-    {
-        //影响服务器
-        result = modifyJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"status","0",1,buf);
-    }
 
     
+    memset(buf,0x00,sizeof(buf));
+    //打包
+    result = packetSingleAddCardJson(msgBuf,1,buf);
+
     if(result != NO_ERR)
     {
         return result;
     }
     
-    len = strlen((const char*)buf);
+    //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
+    ret = mqttSendData(buf,len); 
+    if(ret > 20) //这里是随便一个长度，为了避免跟错误代码冲突，错误代码表要改
+    {
+        gCardSortTimer.cardSortTimer = 60000;
+        gCardSortTimer.flag = 1; 
+        
+        SendToQueue(cardNo,CARD_NO_BCD_LEN,2);            
+    } 
     
-    mqttSendData(buf,len); 
-  
+    //{"data":{"userId":788,"cardNo":"015AA890","status":"1"},"commandCode":"1012","deviceCode":"9A633E85F4084489F4F5"}
+
+
+    
 	return result;
 }
 
@@ -421,7 +440,7 @@ SYSERRORCODE_E DelCardNoAll ( uint8_t* msgBuf )
     {
         log_d("%d / %d :cardNo = %s\r\n",num,i+1,cardArray[i]);      
         memset(tmp,0x00,sizeof(tmp));
-        asc2bcd(tmp, cardArray[i], CARD_USER_LEN, 1);        
+        asc2bcd(tmp, cardArray[i], CARD_NO_LEN, 1);        
         log_d("cardNo: %02x %02x %02x %02x\r\n",tmp[0],tmp[1],tmp[2],tmp[3]);
         
         wRet = delHead(tmp,CARD_MODE);
@@ -660,8 +679,8 @@ static SYSERRORCODE_E DelCardSingle( uint8_t* msgBuf )
 	SYSERRORCODE_E result = NO_ERR;
 	int wRet = 1;
     uint8_t buf[MQTT_TEMP_LEN] = {0};
-    uint8_t cardNo[CARD_USER_LEN] = {0};
-    uint8_t tmp[CARD_USER_LEN] = {0};
+    uint8_t cardNo[CARD_NO_LEN] = {0};
+    uint8_t tmp[CARD_NO_LEN] = {0};
     uint16_t len = 0;
 
     if(!msgBuf)
@@ -673,9 +692,13 @@ static SYSERRORCODE_E DelCardSingle( uint8_t* msgBuf )
     strcpy((char *)tmp,(const char *)GetJsonItem((const uint8_t *)msgBuf,(const uint8_t *)"cardNo",1));
     sprintf((char *)cardNo,"%08s",tmp); 
 
+    log_d("tmp = %s,cardNo = %s\r\n",tmp,cardNo);
+
     memset(tmp,0x00,sizeof(tmp));
-    asc2bcd(tmp, cardNo, CARD_USER_LEN, 1);        
+    asc2bcd(tmp, cardNo, CARD_NO_LEN, 1);        
     log_d("cardNo: %02x %02x %02x %02x\r\n",tmp[0],tmp[1],tmp[2],tmp[3]);    
+
+    tmp[0] = 0x00;
     
     //删除CARDNO
     wRet = delHead(tmp,CARD_MODE);
@@ -778,21 +801,21 @@ static SYSERRORCODE_E GetServerIp ( uint8_t* msgBuf )
 static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
 {
 	SYSERRORCODE_E result = NO_ERR;
-	uint16_t len =0;
     uint8_t buf[256] = {0};
     uint8_t tmpBcd[CARD_NO_BCD_LEN] = {0};   
     uint8_t tmpAsc[CARD_NO_LEN] = {0};
     uint8_t cardArray[20][8] = {0};
     uint8_t multipleCardNum=0;    
-    uint16_t i = 0;    
+    uint16_t i = 0;  
+    int ret = 0;    
 
     if(!msgBuf)
     {
         return STR_EMPTY_ERR;
     }
 
-    gCardSortTimer.flag = 1;
     gCardSortTimer.cardSortTimer = 60000;
+    gCardSortTimer.flag = 1;
     
     //2.保存卡号
     log_d("<1>======mem perused = %3d%======<1>\r\n",mem_perused(SRAMIN));
@@ -809,30 +832,47 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         
         asc2bcd(tmpBcd, tmpAsc, CARD_NO_LEN, 1);        
         tmpBcd[0] = 0x00;//韦根26最高位无数据
-//        dbh("tmp card", tmp, CARD_NO_BCD_LEN);
-        
-        result = SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);
 
-        memset(buf,0x00,sizeof(buf));    
-        if(result == NO_ERR)
-        {
-            //影响服务器
-            result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);
-        }
-        else
-        {
-            //影响服务器
-            result = modifyJsonItem(packetBaseJson(msgBuf,0),"cardNo",tmpAsc,0,buf);
-        }
+
         
+        
+//        result = SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);
+
+//        memset(buf,0x00,sizeof(buf));    
+//        if(result == NO_ERR)
+//        {
+//            //影响服务器
+//            result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);
+//        }
+//        else
+//        {
+//            //影响服务器
+//            result = modifyJsonItem(packetBaseJson(msgBuf,0),"cardNo",tmpAsc,0,buf);
+//        }
+//        
+//        if(result != NO_ERR)
+//        {            
+//            return result;
+//        }
+
+//        len = strlen((const char*)buf);
+//        
+//        mqttSendData(buf,len);  
+
+        
+        memset(buf,0x00,sizeof(buf));
+        result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);        
         if(result != NO_ERR)
         {            
             return result;
-        }
+        }       
 
-        len = strlen((const char*)buf);
-        
-        mqttSendData(buf,len);  
+        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
+        ret = mqttSendData(buf,strlen((const char*)buf)); 
+        if(ret > 20)//随便一个长度
+        {
+            SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);            
+        }
         
     }
     

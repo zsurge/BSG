@@ -40,7 +40,7 @@
 
 #define READMODE        1 
 #define DOWNLOAD_CARD_MODE 2
-    
+#define REMOTE_OPEN_MODE    3
 //事件标志
 #define TASK_BIT_0	 (1 << 0)
 #define TASK_BIT_1	 (1 << 1)
@@ -55,7 +55,7 @@
     
 //#define TASK_BIT_ALL ( TASK_BIT_0 | TASK_BIT_1 | TASK_BIT_2 |TASK_BIT_3|TASK_BIT_4|TASK_BIT_5|TASK_BIT_6)
     
-#define TASK_BIT_ALL ( TASK_BIT_1  |TASK_BIT_3|TASK_BIT_4|TASK_BIT_5)
+#define TASK_BIT_ALL ( TASK_BIT_0  |TASK_BIT_1|TASK_BIT_2|TASK_BIT_3|TASK_BIT_4)
 
 /*----------------------------------------------*
  * 常量定义                                     *

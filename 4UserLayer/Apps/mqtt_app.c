@@ -72,6 +72,8 @@ void mqtt_thread ( void )
 	int qos;
 	unsigned char retained = 0;
 
+	uint8_t reConnectTimes = 0; 
+
 	//获取当前滴答，作为心跳包起始时间
 //	uint32_t curtick  =	 xTaskGetTickCount();
 //	uint32_t sendtick =  xTaskGetTickCount(); 
@@ -181,6 +183,7 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 				{
 					log_d ( "step = %d,MQTT is concet OK!\r\n",CONNACK );	
 					gConnectStatus = 1;
+					reConnectTimes = 0;
 				}
 				msgtypes = SUBSCRIBE;													//连接成功 执行 订阅 操作
 				break;
@@ -365,13 +368,18 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 		}	
 
 //		/* 发送事件标志，表示任务正常运行 */
-		xEventGroupSetBits ( xCreatedEventGroup, TASK_BIT_5 );
+		xEventGroupSetBits ( xCreatedEventGroup, TASK_BIT_4 );
         vTaskDelay ( 200 );
 	}
 
 MQTT_reconnect:    
 	transport_close ( gMySock );    
 	log_d ( "mqtt thread exit.try again 3 sec\r\n" );  
+
+	if(reConnectTimes++ >= 5)
+	{
+	    NVIC_SystemReset();
+	}
     vTaskDelay (200);
     goto MQTT_START;        
 }

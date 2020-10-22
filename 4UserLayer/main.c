@@ -100,28 +100,28 @@ static void AppTaskCreate (void)
     CreateHandShakeTask();
 
     //LED灯
-    CreateLedTask();
+    CreateLedTask();        //0
 
     //跟控制板通讯
-    CreateCommTask();
+    CreateCommTask();       //1
     
 //    //按键
 //    CreateKeyTask();
 
     //读卡器
-    CreateReaderTask();
+    CreateReaderTask();     //2
     
 //    CreateRs485ReaderTask();
 
 
     //卡数据处理
-    CreateDataProcessTask();
+    CreateDataProcessTask();        //3
 
     //MQTT通讯
-    CreateMqttTask();
+    CreateMqttTask();               //4
 
     //看门狗
-//    CreateWatchDogTask();
+    CreateWatchDogTask();
 
     //删除本身
     vTaskDelete(xHandleTaskAppCreate); //删除AppTaskCreate任务

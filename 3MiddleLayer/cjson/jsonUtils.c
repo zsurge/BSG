@@ -153,8 +153,7 @@ SYSERRORCODE_E modifyJsonItem(const uint8_t *srcJson,const uint8_t *item,const u
 *****************************************************************************/
 uint8_t* GetJsonItem ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t isSubitem)
 {
-//	static uint8_t value[JSON_ITEM_MAX_LEN] = {0};
-	uint8_t value[JSON_ITEM_MAX_LEN] = {0};
+	static uint8_t value[JSON_ITEM_MAX_LEN] = {0};
 	
 	cJSON* root,*json_item,*dataObj;
 	
@@ -271,7 +270,7 @@ SYSERRORCODE_E PacketDeviceInfo ( const uint8_t* jsonBuff,const uint8_t* descJso
 
         newroot = cJSON_CreateObject();
         dataObj = cJSON_CreateObject();
-        if(!newroot && !dataObj)
+        if(!newroot || !dataObj)
         {
             log_d ( "Error before: [%s]\r\n",cJSON_GetErrorPtr() );
             cJSON_Delete(root);
@@ -398,7 +397,7 @@ SYSERRORCODE_E saveUpgradeData(uint8_t *jsonBuff)
 
     newroot = cJSON_CreateObject();
     dataObj = cJSON_CreateObject();
-    if(!newroot && !dataObj)
+    if(!newroot || !dataObj)
     {
         log_d ( "Error before: [%s]\r\n",cJSON_GetErrorPtr() );
         cJSON_Delete(root);
@@ -597,16 +596,102 @@ uint8_t* packetBaseJson(uint8_t *jsonBuff,char status)
 
 	}
 	
-    
+    my_free(tmpBuf);
 	cJSON_Delete(root);
     cJSON_Delete(newroot);
-    my_free(root);
-    my_free(newroot);
-    my_free(tmpBuf);
     tmpBuf=NULL;  
     
     return value;    
 }
+
+SYSERRORCODE_E packetSingleAddCardJson(uint8_t *jsonBuff,char status,uint8_t *descBuf)
+{ 
+    SYSERRORCODE_E result = NO_ERR;
+
+	cJSON* root,*newroot,*newDataObj,*dataObj,*json_cardNo,*json_ownerId;
+    char *tmpBuf;
+    
+	root = cJSON_Parse ( ( char* ) jsonBuff );    //解析数据包
+	
+	if ( !root )
+	{
+		log_d ( "Error before: [%s]\r\n",cJSON_GetErrorPtr() );
+        
+        cJSON_Delete(root);        
+        cJSON_Delete(newroot);
+        my_free(tmpBuf);
+        tmpBuf=NULL;        
+        descBuf = NULL;
+		return CJSON_PARSE_ERR;
+	}
+	else
+	{
+        //根据协议，默认所有的子项是data
+        dataObj = cJSON_GetObjectItem ( root, "data" );  
+        json_ownerId = cJSON_GetObjectItem ( dataObj, (const char*)"userId" );	
+        json_cardNo = cJSON_GetObjectItem ( dataObj, (const char*)"cardNo" );   
+        
+        newroot = cJSON_CreateObject();        
+        newDataObj = cJSON_CreateObject();
+   
+        if(!newroot || !newDataObj)        
+        {
+            log_d ( "Error before: [%s]\r\n",cJSON_GetErrorPtr() );
+            cJSON_Delete(root);
+            cJSON_Delete(newroot);
+            cJSON_Delete(newDataObj);
+            my_free(tmpBuf);            
+            tmpBuf=NULL;      
+            descBuf = NULL;            
+    		return CJSON_PARSE_ERR;
+        }
+
+        cJSON_AddItemToObject(newroot, "data", newDataObj);        
+            
+        if(json_ownerId)
+            cJSON_AddNumberToObject(newDataObj, "ownerId", json_ownerId->valueint);
+
+        if(json_cardNo)
+            cJSON_AddStringToObject(newDataObj, "cardNo", json_cardNo->valuestring);
+            
+        
+        if(status == 1)
+            cJSON_AddStringToObject(newDataObj, "status", "1");
+        else
+            cJSON_AddStringToObject(newDataObj, "status", "0");
+
+        cJSON_AddStringToObject(newroot, "commandCode", (const char*)"1034");   
+        cJSON_AddStringToObject(newroot, "deviceCode",gDevBaseParam.deviceCode.deviceSn); 
+        
+        tmpBuf = cJSON_PrintUnformatted(newroot); 
+
+//        log_d("packetBaseJson = %s\r\n",tmpBuf);
+
+        if(!tmpBuf)
+        {
+            log_d("cJSON_PrintUnformatted error \r\n");
+
+            cJSON_Delete(root);
+            cJSON_Delete(newroot);
+            cJSON_Delete(newDataObj);    
+            my_free(tmpBuf);
+            tmpBuf=NULL;
+            descBuf = NULL;            
+            return CJSON_FORMAT_ERR;
+        }    
+
+        strcpy((char *)descBuf,tmpBuf);
+
+	}
+	
+    my_free(tmpBuf);
+	cJSON_Delete(root);
+    cJSON_Delete(newroot);
+    tmpBuf=NULL;  
+
+    return result;
+}
+
 
 void GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num,uint8_t descBuff[][8])
 {    
@@ -648,7 +733,7 @@ void GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num,uin
             for(i=0;i<tmpArrayNum;i++)
             {
                 arrayElement = cJSON_GetArrayItem(json_item, i);                 
-                strcpy (descBuff[i], arrayElement->valuestring ); 
+                strcpy ((char *)descBuff[i], arrayElement->valuestring ); 
                 log_d("result :%d = %s\r\n",i,descBuff[i]); 
             }
 
@@ -676,7 +761,7 @@ void GetCardArray ( const uint8_t* jsonBuff,const uint8_t* item,uint8_t *num,uin
 			}
 			else
 			{
-			    strcpy (descBuff[0], json_item->valuestring ); 
+			    strcpy ((char*)descBuff[0], json_item->valuestring ); 
 			}
 
 			log_d ( "json_item =  %s\r\n",descBuff[0]);

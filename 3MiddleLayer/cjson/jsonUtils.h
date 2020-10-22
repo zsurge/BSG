@@ -130,6 +130,8 @@ SYSERRORCODE_E upgradeDataPacket(uint8_t *descBuf);
 //存储APP升级后需上送的数据
 SYSERRORCODE_E saveUpgradeData(uint8_t *jsonBuff);
 
+//添加单卡卡号响应
+SYSERRORCODE_E packetSingleAddCardJson(uint8_t *jsonBuff,char status,uint8_t *descBuf);
 
 SYSERRORCODE_E getTimePacket(uint8_t *descBuf);
 
