@@ -578,10 +578,10 @@ void initDevBaseParam(void)
         bcd2asc ( (unsigned char*)asc, (unsigned char*)mac, 12, 0 );
         Insertchar ( asc,temp,':' );
 
-        strcpy(temp,"00:00:00:58:36:39");
-        gDevBaseParam.deviceCode.deviceSnLen = strlen ( temp );
+//        strcpy(temp,"00:00:00:58:36:39");
+//        gDevBaseParam.deviceCode.deviceSnLen = strlen ( temp );
         
-//        gDevBaseParam.deviceCode.deviceSnLen = strlen ( temp )-1 ;
+        gDevBaseParam.deviceCode.deviceSnLen = strlen ( temp )-1 ;
         memcpy ( gDevBaseParam.deviceCode.deviceSn,temp,gDevBaseParam.deviceCode.deviceSnLen);
         strcpy ( gDevBaseParam.mqttTopic.publish,DEV_FACTORY_PUBLISH );
         strcpy ( gDevBaseParam.mqttTopic.subscribe,DEV_FACTORY_SUBSCRIBE );

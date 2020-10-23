@@ -103,8 +103,9 @@ static void AppTaskCreate (void)
     CreateLedTask();        //0
 
     //跟控制板通讯
-    CreateCommTask();       //1
-    
+//    CreateCommTask();       //1
+    CreateOpenDoorTask();       //1
+   
 //    //按键
 //    CreateKeyTask();
 
@@ -121,7 +122,7 @@ static void AppTaskCreate (void)
     CreateMqttTask();               //4
 
     //看门狗
-    CreateWatchDogTask();
+//    CreateWatchDogTask();
 
     //删除本身
     vTaskDelete(xHandleTaskAppCreate); //删除AppTaskCreate任务
@@ -172,7 +173,7 @@ static void AppObjCreate (void)
     
     
     xCmdQueue = xQueueCreate((UBaseType_t ) QUEUE_LEN,/* 消息队列的长度 */
-                              (UBaseType_t ) sizeof(CMD_BUFF_STRU *));/* 消息的大小 */
+                              (UBaseType_t ) QUEUE_SIZE);/* 消息的大小 */
     if(xCmdQueue == NULL)
     {
         App_Printf("create xCmdQueue error!\r\n");

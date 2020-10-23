@@ -129,14 +129,14 @@ static void vTaskLed(void *pvParameters)
 
         LEDERROR = !LEDERROR;
 
-        SW2_LOW();
+//        SW2_LOW();
 
 		/* 发送事件标志，表示任务正常运行 */        
 		xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_0);  
         vTaskDelay(1000); 
 
-        SW2_HI();
-        vTaskDelay(1000);    
+//        SW2_HI();
+//        vTaskDelay(1000);    
     }
 } 
 

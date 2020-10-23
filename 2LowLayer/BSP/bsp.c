@@ -50,7 +50,7 @@ static void my_mem_init(void)
 
  void bsp_Init(void)
 {
-    NVIC_SetVectorTable(NVIC_VectTab_FLASH,0x00000);
+    NVIC_SetVectorTable(NVIC_VectTab_FLASH,0x30000);
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);//设置系统中断优先级分组4
 	delay_init(168);            //初始化延时函数
 

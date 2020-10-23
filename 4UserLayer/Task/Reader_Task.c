@@ -29,6 +29,7 @@
 #include "tool.h"
 #include "LocalData.h"
 #include "bsp_Wiegand.h"
+#include "bsp_beep.h"
 
 
 
@@ -130,7 +131,11 @@ static void vTaskReader(void *pvParameters)
                 DBG("send card1  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
-            }            
+            }   
+            else
+            {                
+                Sound2(100);
+            }
 
         }
         
@@ -156,6 +161,10 @@ static void vTaskReader(void *pvParameters)
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
             } 
+            else
+            {                
+                Sound2(100);
+            }
 
         }  
         

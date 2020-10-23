@@ -513,6 +513,52 @@ SYSERRORCODE_E getTimePacket(uint8_t *descBuf)
     return result;
 }
 
+//SYSERRORCODE_E getHeartbeatPacket(uint8_t *descBuf)
+//{
+//    SYSERRORCODE_E result = NO_ERR;
+//    cJSON *root;  
+//    char *tmpBuf;
+//    
+//    root = cJSON_CreateObject();
+//    if (!root)  
+//    {          
+//        log_d("Error before: [%s]\r\n",cJSON_GetErrorPtr());  
+//        cJSON_Delete(root);
+//        my_free(root);        
+//        my_free(tmpBuf);
+//        return CJSON_PARSE_ERR;
+//    } 
+//    
+//    cJSON_AddStringToObject(root,"commandCode","99999");
+//    cJSON_AddStringToObject(root,"deviceCode",gDevBaseParam.deviceCode.deviceSn);
+//     
+//    tmpBuf = cJSON_PrintUnformatted(root); 
+
+//    if(tmpBuf == NULL)
+//    {
+//        log_d("cJSON_PrintUnformatted error \r\n");
+//        my_free(tmpBuf);
+//        cJSON_Delete(root);
+//        my_free(root);        
+//        
+//        return CJSON_FORMAT_ERR;
+//    }    
+
+//    strcpy((char *)descBuf,tmpBuf);
+
+
+//    log_d("heartbeat = %s\r\n",tmpBuf);
+
+//    cJSON_Delete(root);
+//    my_free(root);        
+
+//    my_free(tmpBuf);
+//    tmpBuf=NULL;        
+
+//    return result;
+//}
+
+
 
 
 uint8_t* packetBaseJson(uint8_t *jsonBuff,char status)

@@ -33,6 +33,8 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 #define  QUEUE_LEN    10     /* 队列的长度，最大可包含多少个消息 */
+#define  QUEUE_SIZE   4      /* 队列的中每个消息的大小*/
+
 #define  CARD_QUEUE_LEN    20     /* 队列的长度，最大可包含多少个消息 */
 
 #define READER1         1           
@@ -40,7 +42,10 @@
 
 #define READMODE        1 
 #define DOWNLOAD_CARD_MODE 2
-#define REMOTE_OPEN_MODE    3
+#define REMOTE_OPEN_MODE 3
+#define DEL_CARD_MODE 4
+
+    
 //事件标志
 #define TASK_BIT_0	 (1 << 0)
 #define TASK_BIT_1	 (1 << 1)
@@ -55,18 +60,18 @@
     
 //#define TASK_BIT_ALL ( TASK_BIT_0 | TASK_BIT_1 | TASK_BIT_2 |TASK_BIT_3|TASK_BIT_4|TASK_BIT_5|TASK_BIT_6)
     
-#define TASK_BIT_ALL ( TASK_BIT_0  |TASK_BIT_1|TASK_BIT_2|TASK_BIT_3|TASK_BIT_4)
+#define TASK_BIT_ALL ( TASK_BIT_0 | TASK_BIT_1 |TASK_BIT_2|TASK_BIT_3|TASK_BIT_4)
 
 /*----------------------------------------------*
  * 常量定义                                     *
  *----------------------------------------------*/
 
 #define MAX_CMD_LEN
- typedef struct CMD_BUFF
- {
-    uint8_t cmd_len; 
-    uint8_t cmd[32];
- }CMD_BUFF_STRU;
+// typedef struct CMD_BUFF
+// {
+//    uint8_t cmd_len; 
+//    uint8_t cmd[32];
+// }CMD_BUFF_STRU;
 
 /*----------------------------------------------*
  * 模块级变量                                   *
@@ -78,7 +83,7 @@ extern QueueHandle_t xCmdQueue;
 extern QueueHandle_t xCardIDQueue; 
 
 
-extern CMD_BUFF_STRU gCmd_buff;
+//extern CMD_BUFF_STRU gCmd_buff;
 
 /*----------------------------------------------*
  * 内部函数原型说明                             *

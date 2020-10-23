@@ -29,24 +29,21 @@
 volatile uint32_t ulHighFrequencyTimerTicks = 0UL;
 
 volatile uint32_t g500usTimerUART = 0;
-volatile uint32_t g500usTimerRS485 = 0;
+//volatile uint32_t gHeartBeat = 0;
 
-volatile uint32_t gPlayTimer = 0;
-volatile uint32_t gFollowTimer = 0;
-volatile uint32_t gRetrogradeTimer = 0;
-CARDSORT_STRU gCardSortTimer = {0};
+TIM_TYPE gOpenDoorTimer = 0;
+TIM_TYPE gOpenDoor2Timer = 0;
+TIM_TYPE gCardSortTimer = {0};
 
 
 //volatile uint32_t gRandomNum = 0;
 
 void bsp_TimeSysTickHandler (void)
 {
-    if (g500usTimerUART) g500usTimerUART--;    
-    if (g500usTimerRS485) g500usTimerRS485--; 
-    if (gPlayTimer) gPlayTimer--; 
-    if (gFollowTimer) gFollowTimer--;    
-    if (gRetrogradeTimer) gRetrogradeTimer--;
-    if (gCardSortTimer.cardSortTimer) gCardSortTimer.cardSortTimer--;    
+    if (g500usTimerUART) g500usTimerUART--;  
+    if (gOpenDoorTimer.outTimer) gOpenDoorTimer.outTimer--; 
+    if (gOpenDoor2Timer.outTimer) gOpenDoor2Timer.outTimer--; 
+    if (gCardSortTimer.outTimer) gCardSortTimer.outTimer--;    
 }
 
 void bsp_TIM6_Init(void)

@@ -30,6 +30,7 @@
 #include "tool.h"
 #include "bsp_time.h"
 
+
 /*----------------------------------------------*
  * 宏定义                                       *
  *----------------------------------------------*/
@@ -46,7 +47,7 @@ const char *dataProcTaskName = "vDataProcTask";
  * 模块级变量                                   *
  *----------------------------------------------*/
 TaskHandle_t xHandleTaskDataProc = NULL;  
-CMD_BUFF_STRU gCmd_buff = {0};
+//CMD_BUFF_STRU gCmd_buff = {0};
 
 
 /*----------------------------------------------*
@@ -73,20 +74,21 @@ static void vTaskDataProcess(void *pvParameters)
     int ret = 0;
     int len = 0;
 
-    uint8_t openLeft[8] = { 0x02,0x00,0x07,0x01,0x06,0x4c,0x03,0x4D };    
-    uint8_t openRight[8] = { 0x02,0x00,0x07,0x01,0x06,0x52,0x03,0x53 };
+//    uint8_t openLeft[8] = { 0x02,0x00,0x07,0x01,0x06,0x4c,0x03,0x4D };    
+//    uint8_t openRight[8] = { 0x02,0x00,0x07,0x01,0x06,0x52,0x03,0x53 };
     uint8_t jsonbuff[256] = {0};
 
+    uint32_t devID = 0;
     
-    CMD_BUFF_STRU *ptCmd = &gCmd_buff;
+//    CMD_BUFF_STRU *ptCmd = &gCmd_buff;
     READER_BUFF_STRU *ptMsg  = &gReaderRecvMsg;
     memset(&gReaderRecvMsg,0x00,sizeof(READER_BUFF_STRU));   
-    memset(&gCmd_buff,0x00,sizeof(CMD_BUFF_STRU));       
+//    memset(&gCmd_buff,0x00,sizeof(CMD_BUFF_STRU));       
     
     while (1)
     {
         //卡号下发完成后，30秒无卡号下发，则进最后一面进行排序
-        if(gCardSortTimer.flag && gCardSortTimer.cardSortTimer == 0)
+        if(gCardSortTimer.flag && gCardSortTimer.outTimer == 0)
         {
             log_d("-----start sort-----\r\n");
             gCardSortTimer.flag = 0;
@@ -123,6 +125,7 @@ static void vTaskDataProcess(void *pvParameters)
         if(ptMsg->mode == DOWNLOAD_CARD_MODE)
         {
             ret = addCard(ptMsg->cardID,CARD_MODE);
+            log_d("addCard = %d\r\n",ret);
             
             if(ret != 1)
             {
@@ -130,10 +133,22 @@ static void vTaskDataProcess(void *pvParameters)
                //2.排序
             }              
         }
+        else if(ptMsg->mode == DEL_CARD_MODE)
+        {
+            ret = delHead(ptMsg->cardID,CARD_MODE);
+            log_d("delHead = %d\r\n",ret);
+            
+            if(ret != 1)
+            {
+               //1.删除用户失败
+
+            }              
+        }        
         else if(ptMsg->mode == READMODE) //读卡
         {      
-            memcpy(ptMsg->cardID,"\x00\xc2\x84\x94",4);
-            log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);
+        
+//            memcpy(ptMsg->cardID,"\x00\xc2\x84\x94",4);
+            log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
             
             ret = readHead(ptMsg->cardID, CARD_MODE);
             log_d("readHead = %d\r\n",ret);
@@ -142,20 +157,23 @@ static void vTaskDataProcess(void *pvParameters)
             {
                 log_d("read card success\r\n");     
 
-                ptCmd->cmd_len = 8;
-                
-                if(ptMsg->devID == 1)
-                {
-                    memcpy(ptCmd->cmd,openLeft,ptCmd->cmd_len);                
+                devID = ptMsg->devID;
+
+                if(devID == READER1)
+                {                    
+                    gOpenDoorTimer.flag = 1;
+                    gOpenDoorTimer.outTimer = 12000;
                 }
-                else
+                else if(devID == READER2)
                 {
-                    memcpy(ptCmd->cmd,openRight,ptCmd->cmd_len); 
-                } 
+                    gOpenDoor2Timer.flag = 1;
+                    gOpenDoor2Timer.outTimer = 12000;
+                }
+                
 
     			/* 使用消息队列实现指针变量的传递 */
     			if(xQueueSend(xCmdQueue,             /* 消息队列句柄 */
-    						 (void *) &ptCmd,             /* 发送结构体指针变量ptReader的地址 */
+    						 (void *) &devID,             /* 发送结构体指针变量ptReader的地址 */
     						 (TickType_t)30) != pdPASS )
     			{
                     xQueueReset(xCmdQueue);
@@ -193,20 +211,24 @@ static void vTaskDataProcess(void *pvParameters)
             //发送开门指令
 
             log_d("read card success\r\n");     
+            
+            devID = 1;
+            gOpenDoorTimer.flag = 1;
+            gOpenDoorTimer.outTimer = 12000;
 
-            ptCmd->cmd_len = 8;  
-            memcpy(ptCmd->cmd,openLeft,ptCmd->cmd_len);  
+//            ptCmd->cmd_len = 8;  
+//            memcpy(ptCmd->cmd,openLeft,ptCmd->cmd_len);  
             
 			/* 使用消息队列实现指针变量的传递 */
 			if(xQueueSend(xCmdQueue,             /* 消息队列句柄 */
-						 (void *) &ptCmd,             /* 发送结构体指针变量ptReader的地址 */
+						 (void *) &devID,             /* 发送结构体指针变量ptReader的地址 */
 						 (TickType_t)30) != pdPASS )
 			{
                 xQueueReset(xCmdQueue);
                 DBG("send card2  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
-            }            
+            } 
         }
         
         
