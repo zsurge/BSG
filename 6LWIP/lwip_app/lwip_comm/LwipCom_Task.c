@@ -30,8 +30,7 @@ const char * LwipComTaskName = "vLwipComTask";		//看门狗任务名
 static void vLwipComTask( void *pvParameters );	//看门狗任务
 
 void StartvLwipComTask(void * pram)
-{
-	
+{	
 	xTaskCreate( vLwipComTask, LwipComTaskName, configMINIMAL_STACK_SIZE, pram, LwipComTask_PRIORITY, NULL );
 }
 

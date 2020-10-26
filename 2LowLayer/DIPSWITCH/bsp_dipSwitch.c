@@ -112,12 +112,17 @@ void bsp_sw_init(void)
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;//上拉
     GPIO_Init(GPIOG, &GPIO_InitStructure);//初始化GPIOE2,3,4
     
-    GPIO_SetBits(GPIOG, GPIO_Pin_2);
+    //GPIO_SetBits(GPIOG, GPIO_Pin_2);
        
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;//WK_UP对应引脚PA0
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;//下拉
     GPIO_Init(GPIOD, &GPIO_InitStructure);//初始化GPIOA0
 
-    GPIO_SetBits(GPIOD, GPIO_Pin_15);
+//    GPIO_SetBits(GPIOD, GPIO_Pin_15);
+
+    SW1_LOW();
+    
+    SW2_LOW();
+
 }
 

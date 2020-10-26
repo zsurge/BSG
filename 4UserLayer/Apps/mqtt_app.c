@@ -25,6 +25,8 @@
 #include "bsp_beep.h"
 #include "jsonUtils.h"
 #include "bsp_ds1302.h"
+#include "LwipDHCP_Task.h"
+
 
 #define send_duration	180	//心跳发送周期（ms）
 
@@ -76,8 +78,7 @@ void mqtt_thread ( void )
 	unsigned char dup;
 	int qos;
 	unsigned char retained = 0;
-	uint8_t reConnectTimes = 0; 
-
+	char pingEQTimes = 0; 
 	
 	
     //获取当前滴答，作为心跳包起始时间
@@ -86,12 +87,13 @@ void mqtt_thread ( void )
 
 	uint8_t msgtypes = CONNECT;		//消息状态初始化
 	uint8_t t=0;    
+	
 
 	log_d ( "socket connect to server\r\n" );
 	gMySock = transport_open ( ( char* ) HOST_NAME,HOST_PORT );
 	log_d ( "1.Sending to hostname %s port %d,gMySock = %d\r\n", HOST_NAME, HOST_PORT,gMySock );
     
-MQTT_START:    
+MQTT_START: 
 	len = MQTTSerialize_disconnect ( ( unsigned char* ) buf,buflen );
 	rc = transport_sendPacketBuffer ( gMySock, ( uint8_t* ) buf, len );
 	if ( rc == len )															
@@ -338,6 +340,31 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 				log_d ( "step = %d,PUBCOMP!\r\n",PUBCOMP );        			//just for qos2
 				msgtypes = 0;
 				break;
+
+			case PINGREQ:   
+				log_d ( "step = %d,mqtt server ping \r\n",PINGREQ );  			//心跳			
+			    len = MQTTSerialize_pingreq((unsigned char*)buf, buflen);							//心跳
+				rc = transport_sendPacketBuffer(gMySock, (unsigned char*)buf, len);
+				if(rc == len)
+				{
+				    log_d("pingEQTimes = %d\r\n",pingEQTimes);
+            		if(pingEQTimes++ >= 5)
+                	{
+                	    pingEQTimes = 0;
+                	    msgtypes = 0; 
+                        gConnectStatus = 0;
+                        goto MQTT_reconnect;     
+                	}				    
+					log_d("send PINGREQ Successfully\r\n");
+			    }
+				else
+				{
+                    log_d("time to ping mqtt server to take alive!\r\n");
+                    NVIC_SystemReset();
+                }	
+                msgtypes = 0;
+				break;
+#if 0		//因为上海跳的太频繁					
 			//心跳请求
 			case PINGREQ://12
 				len = MQTTSerialize_pingreq ( ( unsigned char* ) buf, buflen );		
@@ -367,9 +394,11 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
                     goto MQTT_reconnect;                    
 				}				            
 				break;
+#endif				
 			//心跳响应
 			case PINGRESP://13
-				log_d ( "step = %d,111 mqtt server Pong\r\n",PINGRESP );  			//心跳回执，服务有响应
+			    pingEQTimes--;
+				log_d ( "step = %d,mqtt server Pong\r\n",PINGRESP );  			//心跳回执，服务有响应
 				msgtypes = 0;
 				break;
             case UNSUBSCRIBE:
@@ -391,12 +420,19 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 		}
 		memset ( buf,0,buflen );
 		rc=MQTTPacket_read ( ( unsigned char* ) buf, buflen, transport_getdata ); //轮询，读MQTT返回数据，
-//		log_d("MQTTPacket_read = %d\r\n",rc);
-		if ( rc >0 ) //如果有数据，进入相应状态。
+//		log_d("MQTTPacket_read = %d,msgtypes = %d\r\n",rc,msgtypes);
+		if ( rc > 0 ) //如果有数据，进入相应状态。
 		{
 			msgtypes = rc;
 //			log_d ( "MQTT is get recv: msgtypes = %d\r\n",msgtypes );
 		}	
+
+//		if(reConnectTimes >= 3)
+//    	{
+//    	    reConnectTimes = 0;
+//    	    //NVIC_SystemReset();    	    
+//            SetGB_DHCPState(DHCP_START);
+//    	}
 
 //		/* 发送事件标志，表示任务正常运行 */
 		xEventGroupSetBits ( xCreatedEventGroup, TASK_BIT_4 );
@@ -407,10 +443,6 @@ MQTT_reconnect:
 	transport_close ( gMySock );    
 	log_d ( "mqtt thread exit.try again 3 sec\r\n" );  
 
-	if(reConnectTimes++ >= 10)
-	{
-	    NVIC_SystemReset();
-	}
     vTaskDelay (200);
     goto MQTT_START;        
 }

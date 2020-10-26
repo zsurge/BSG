@@ -104,14 +104,11 @@ static void AppTaskCreate (void)
 
     //跟控制板通讯
 //    CreateCommTask();       //1
-    CreateOpenDoorTask();       //1
-   
-//    //按键
-//    CreateKeyTask();
+    CreateOpenDoorTask();       //1  
+
 
     //读卡器
-    CreateReaderTask();     //2
-    
+    CreateReaderTask();     //2    
 //    CreateRs485ReaderTask();
 
 
@@ -122,7 +119,7 @@ static void AppTaskCreate (void)
     CreateMqttTask();               //4
 
     //看门狗
-//    CreateWatchDogTask();
+    CreateWatchDogTask();
 
     //删除本身
     vTaskDelete(xHandleTaskAppCreate); //删除AppTaskCreate任务

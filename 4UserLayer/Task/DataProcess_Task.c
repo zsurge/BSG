@@ -35,7 +35,7 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 
-#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
+#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 4) 
 #define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*12)
 
 /*----------------------------------------------*
@@ -110,7 +110,11 @@ static void vTaskDataProcess(void *pvParameters)
                                  (void *)&ptMsg,  /*这里获取的是结构体的地址 */
                                  xMaxBlockTime); /* 设置阻塞时间 */
         if(pdTRUE != xReturn)
-        {  
+        {          
+            /* 发送事件标志，表示任务正常运行 */        
+            xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_3); 
+            vTaskDelay(30); 
+            
             //没有接收到数据
             //队列满            
             continue;

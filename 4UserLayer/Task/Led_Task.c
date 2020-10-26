@@ -34,7 +34,7 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 #define LED_TASK_PRIO	    (tskIDLE_PRIORITY)
-#define LED_STK_SIZE 		(configMINIMAL_STACK_SIZE*2)
+#define LED_STK_SIZE 		(configMINIMAL_STACK_SIZE)
 
 /*----------------------------------------------*
  * 常量定义                                     *
@@ -67,66 +67,9 @@ void CreateLedTask(void)
 
 //LED任务函数 
 static void vTaskLed(void *pvParameters)
-{ 
-
-//    uint32_t iTime1=0,iTime2  =  0;    
-//    char wbuf[256] = {"hello world"};
-//    char rbuf[256] = {0};
-//    uint16_t i = 0;
-    
-//    Sound2(300);
-
-
-//    for(i=0;i<256;i++)
-//    {
-//        if(i % 2 == 0)
-//        {
-//          wbuf[i] = 0x55;
-//        }
-//        else
-//        {
-//            wbuf[i] = 0xBB;        
-//        }
-//    }
-
-//        SPI_FLASH_BufferRead(rbuf,1000,255);
-
-//        dbh("1 rx", rbuf, 255);
-
-//        iTime1  =  xTaskGetTickCount();
-//        SPI_FLASH_SectorErase(1000,1000);
-//        iTime2 = xTaskGetTickCount();   /* 记下结束时间 */
-//        log_d ( "SPI_FLASH_SectorErase，use %d ms\r\n",iTime2 - iTime1 );   
-
-//        SPI_FLASH_BufferRead(rbuf,1000,255);
-
-//        dbh("2 rx", rbuf, 255);        
-
-//        SPI_FLASH_BufferWrite(wbuf,1000,255);        
-
-//        SPI_FLASH_BufferRead(rbuf,1000,255);
-
-//        dbh("3 rx", rbuf, 255);
-
-//        iTime1  =  xTaskGetTickCount();
-//        SPI_FLASH_BulkErase();
-//        iTime2 = xTaskGetTickCount();   /* 记下结束时间 */
-//        log_d ( "SPI_FLASH_BulkErase，use %d ms\r\n",iTime2 - iTime1 );           
-//        
-//        SPI_FLASH_BufferRead(rbuf,1000,255);
-//        
-//        dbh("4 rx", rbuf, 255);
-
-        
-
-
-
+{   
     while(1)
     {  
-
-//        SPI_FLASH_BufferRead(rbuf,1000,255);
-//        dbh("rx", rbuf, 255);
-
         LEDERROR = !LEDERROR;
 
 //        SW2_LOW();

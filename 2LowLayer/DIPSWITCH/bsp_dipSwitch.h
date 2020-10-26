@@ -54,11 +54,11 @@
 #define SW1 		PGin(2)		
 #define SW2		    PDin(15)	
 
-#define SW1_LOW()	    GPIOG->BSRRL = GPIO_Pin_2
-#define SW1_HI()	    GPIOG->BSRRH = GPIO_Pin_2
+#define SW2_LOW()	    GPIOG->BSRRL = GPIO_Pin_2
+#define SW2_HI()	    GPIOG->BSRRH = GPIO_Pin_2
 
-#define SW2_LOW()	    GPIOD->BSRRL = GPIO_Pin_15
-#define SW2_HI()	    GPIOD->BSRRH = GPIO_Pin_15
+#define SW1_LOW()	    GPIOD->BSRRL = GPIO_Pin_15
+#define SW1_HI()	    GPIOD->BSRRH = GPIO_Pin_15
 
 
 

@@ -33,7 +33,7 @@
  * ∫Í∂®“Â                                       *
  *----------------------------------------------*/
  
-#define OPENDOOR_TASK_PRIO		(tskIDLE_PRIORITY + 8) 
+#define OPENDOOR_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
 #define OPENDOOR_STK_SIZE 		(configMINIMAL_STACK_SIZE*2)
 
 

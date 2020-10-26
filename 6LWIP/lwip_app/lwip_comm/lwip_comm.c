@@ -137,7 +137,8 @@ u8 lwip_comm_init ( void )
 	struct ip_addr gw;      			//Ä¬ÈÏÍø¹Ø
 
 	if ( ETH_Mem_Malloc() )
-	{
+	{	
+//        printf ( "ETH_Mem_Malloc error\r\n" );
 		return 1;    //ÄÚ´æÉêÇëÊ§°Ü
 	}
 //	printf ( "ETH_Mem_Malloc\r\n" );

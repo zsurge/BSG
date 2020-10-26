@@ -39,7 +39,7 @@
 /*----------------------------------------------*
  * ∫Í∂®“Â                                       *
  *----------------------------------------------*/
-#define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 1)
+#define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 3)
 #define READER_STK_SIZE 		(configMINIMAL_STACK_SIZE*8)
 
 
