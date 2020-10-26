@@ -51,14 +51,19 @@
 #define DIP3		PGin(4)		
 
 
-#define SW1 		PGin(2)		
-#define SW2		    PDin(15)	
 
-#define SW2_LOW()	    GPIOG->BSRRL = GPIO_Pin_2
-#define SW2_HI()	    GPIOG->BSRRH = GPIO_Pin_2
+//#define SW2_LOW()	    GPIOG->BSRRL = GPIO_Pin_2
+//#define SW2_HI()	    GPIOG->BSRRH = GPIO_Pin_2
 
-#define SW1_LOW()	    GPIOD->BSRRL = GPIO_Pin_15
-#define SW1_HI()	    GPIOD->BSRRH = GPIO_Pin_15
+//#define SW1_LOW()	    GPIOD->BSRRL = GPIO_Pin_15
+//#define SW1_HI()	    GPIOD->BSRRH = GPIO_Pin_15
+
+#define SW2_LOW()	    GPIO_ResetBits(GPIOG, GPIO_Pin_2)
+#define SW2_HI()	    GPIO_SetBits(GPIOG, GPIO_Pin_2)
+
+#define SW1_LOW()	    GPIO_ResetBits(GPIOD, GPIO_Pin_15)
+#define SW1_HI()	    GPIO_SetBits(GPIOD, GPIO_Pin_15)
+
 
 
 
@@ -76,8 +81,9 @@
 
 void bsp_dipswitch_init(void);
 int16_t bsp_dipswitch_read(void);
-
 void bsp_sw_init(void);
+
+
 
 #endif
 

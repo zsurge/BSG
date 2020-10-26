@@ -111,7 +111,6 @@ static void AppTaskCreate (void)
     CreateReaderTask();     //2    
 //    CreateRs485ReaderTask();
 
-
     //卡数据处理
     CreateDataProcessTask();        //3
 

@@ -342,12 +342,11 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 				break;
 
 			case PINGREQ:   
-				log_d ( "step = %d,mqtt server ping \r\n",PINGREQ );  			//心跳			
+				log_d ( "step = %d,mqtt server ping ,pingEQTimes = %d\r\n",PINGREQ,pingEQTimes);  			//心跳			
 			    len = MQTTSerialize_pingreq((unsigned char*)buf, buflen);							//心跳
 				rc = transport_sendPacketBuffer(gMySock, (unsigned char*)buf, len);
 				if(rc == len)
 				{
-				    log_d("pingEQTimes = %d\r\n",pingEQTimes);
             		if(pingEQTimes++ >= 5)
                 	{
                 	    pingEQTimes = 0;
@@ -364,7 +363,7 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
                 }	
                 msgtypes = 0;
 				break;
-#if 0		//因为上海跳的太频繁					
+#if 0		//会频繁触发MQTT上下线机制	
 			//心跳请求
 			case PINGREQ://12
 				len = MQTTSerialize_pingreq ( ( unsigned char* ) buf, buflen );		
