@@ -342,7 +342,7 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 				break;
 
 			case PINGREQ:   
-				log_d ( "step = %d,mqtt server ping ,pingEQTimes = %d\r\n",PINGREQ,pingEQTimes);  			//ÐÄÌø			
+//				log_d ( "step = %d,mqtt server ping ,pingEQTimes = %d\r\n",PINGREQ,pingEQTimes);  			//ÐÄÌø			
 			    len = MQTTSerialize_pingreq((unsigned char*)buf, buflen);							//ÐÄÌø
 				rc = transport_sendPacketBuffer(gMySock, (unsigned char*)buf, len);
 				if(rc == len)
@@ -354,7 +354,7 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
                         gConnectStatus = 0;
                         goto MQTT_reconnect;     
                 	}				    
-					log_d("send PINGREQ Successfully\r\n");
+					log_d("send PINGREQ Successfully,,pingEQTimes = %d\r\n",pingEQTimes);
 			    }
 				else
 				{

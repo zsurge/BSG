@@ -35,7 +35,7 @@
 #define  QUEUE_LEN    10     /* 队列的长度，最大可包含多少个消息 */
 #define  QUEUE_SIZE   4      /* 队列的中每个消息的大小*/
 
-#define  CARD_QUEUE_LEN    20     /* 队列的长度，最大可包含多少个消息 */
+#define  CARD_QUEUE_LEN    10     /* 队列的长度，最大可包含多少个消息 */
 
 #define READER1         1           
 #define READER2         2
@@ -54,7 +54,7 @@
 #define TASK_BIT_4	 (1 << 4)
     
     
-#define TASK_BIT_ALL ( TASK_BIT_0 | TASK_BIT_1| TASK_BIT_2|TASK_BIT_3|TASK_BIT_4)
+#define TASK_BIT_ALL ( TASK_BIT_0 | TASK_BIT_1| TASK_BIT_2|TASK_BIT_4)
 
 /*----------------------------------------------*
  * 常量定义                                     *

@@ -39,7 +39,7 @@
 /*----------------------------------------------*
  * 宏定义                                       *
  *----------------------------------------------*/
-#define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 3)
+#define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 1)
 #define READER_STK_SIZE 		(configMINIMAL_STACK_SIZE*8)
 
 
@@ -107,6 +107,7 @@ static void vTaskReader(void *pvParameters)
     {        
         /* 清零 */
         ptReaderBuf->devID = 0; 
+        ptReaderBuf->mode = 0;
         memset(ptReaderBuf->cardID,0x00,sizeof(ptReaderBuf->cardID));  
 
     
@@ -115,6 +116,7 @@ static void vTaskReader(void *pvParameters)
 
         if(cardDev1.id != 0)
         {
+            Sound2(50);
             reverseArray(cardDev1.sn);
             
             ptReaderBuf->devID = READER1; 
@@ -131,20 +133,18 @@ static void vTaskReader(void *pvParameters)
                 DBG("send card1  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
-            }   
-            else
-            {                
-                Sound2(100);
-            }
+            } 
 
         }
         
         /* 清零 */
         ptReaderBuf->devID = 0; 
+        ptReaderBuf->mode = 0;
         memset(ptReaderBuf->cardID,0x00,sizeof(ptReaderBuf->cardID));  
 
         if(cardDev2.id != 0)
         {
+            Sound2(50);
             reverseArray(cardDev2.sn);
             
             ptReaderBuf->devID = READER2; 
@@ -160,12 +160,7 @@ static void vTaskReader(void *pvParameters)
                 DBG("send card2  queue is error!\r\n"); 
                 //发送卡号失败蜂鸣器提示
                 //或者是队列满                
-            } 
-            else
-            {                
-                Sound2(100);
             }
-
         }  
         
     	/* 发送事件标志，表示任务正常运行 */        

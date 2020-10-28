@@ -35,8 +35,8 @@
  * 宏定义                                       *
  *----------------------------------------------*/
 
-#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 4) 
-#define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*12)
+#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
+#define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*20)
 
 /*----------------------------------------------*
  * 常量定义                                     *
@@ -74,8 +74,6 @@ static void vTaskDataProcess(void *pvParameters)
     int ret = 0;
     int len = 0;
 
-//    uint8_t openLeft[8] = { 0x02,0x00,0x07,0x01,0x06,0x4c,0x03,0x4D };    
-//    uint8_t openRight[8] = { 0x02,0x00,0x07,0x01,0x06,0x52,0x03,0x53 };
     uint8_t jsonbuff[256] = {0};
 
     uint32_t devID = 0;
@@ -110,71 +108,113 @@ static void vTaskDataProcess(void *pvParameters)
                                  (void *)&ptMsg,  /*这里获取的是结构体的地址 */
                                  xMaxBlockTime); /* 设置阻塞时间 */
         if(pdTRUE != xReturn)
-        {          
-            /* 发送事件标志，表示任务正常运行 */        
-            xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_3); 
-            vTaskDelay(30); 
-            
-            //没有接收到数据
-            //队列满            
+        { 
             continue;
         }
-
-        //消息接收成功，发送接收到的消息                
-        log_d("cardid %02x,%02x,%02x,%02x,devid = %d,mode = %d\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3],ptMsg->devID,ptMsg->mode);
-    
-        log_d("======vTaskDataProcess mem perused = %3d%======\r\n",mem_perused(SRAMIN));
-
-        //写卡
-        if(ptMsg->mode == DOWNLOAD_CARD_MODE)
-        {
-            ret = addCard(ptMsg->cardID,CARD_MODE);
-            log_d("addCard = %d\r\n",ret);
-            
-            if(ret != 1)
-            {
-               //1.添加用户失败，重启，继续添加
-               //2.排序
-            }              
-        }
-        else if(ptMsg->mode == DEL_CARD_MODE)
-        {
-            ret = delHead(ptMsg->cardID,CARD_MODE);
-            log_d("delHead = %d\r\n",ret);
-            
-            if(ret != 1)
-            {
-               //1.删除用户失败
-
-            }              
-        }        
-        else if(ptMsg->mode == READMODE) //读卡
-        {      
         
-//            memcpy(ptMsg->cardID,"\x00\xc2\x84\x94",4);
-            log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
-            
-            ret = readHead(ptMsg->cardID, CARD_MODE);
-            log_d("readHead = %d\r\n",ret);
-            
-            if(ret != NO_FIND_HEAD)
+            //消息接收成功，发送接收到的消息                
+            log_d("cardid %02x,%02x,%02x,%02x,devid = %d,mode = %d\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3],ptMsg->devID,ptMsg->mode);
+        
+            log_d("======vTaskDataProcess mem perused = %3d%======\r\n",mem_perused(SRAMIN));
+
+            //写卡
+            if(ptMsg->mode == DOWNLOAD_CARD_MODE)
             {
-                log_d("read card success\r\n");     
-
-                devID = ptMsg->devID;
-
-                if(devID == READER1)
-                {                    
-                    gOpenDoorTimer.flag = 1;
-                    gOpenDoorTimer.outTimer = 12000;
-                }
-                else if(devID == READER2)
-                {
-                    gOpenDoor2Timer.flag = 1;
-                    gOpenDoor2Timer.outTimer = 12000;
-                }
+                ret = addCard(ptMsg->cardID,CARD_MODE);
+                log_d("addCard = %d\r\n",ret);
                 
+                if(ret != 1)
+                {
+                   //1.添加用户失败，重启，继续添加
+                   //2.排序
+                }              
+            }
+            else if(ptMsg->mode == DEL_CARD_MODE)
+            {
+                ret = delHead(ptMsg->cardID,CARD_MODE);
+                log_d("delHead = %d\r\n",ret);
+                
+                if(ret != 1)
+                {
+                   //1.删除用户失败
 
+                }              
+            }        
+            else if(ptMsg->mode == READMODE) //读卡
+            {      
+            
+    //            memcpy(ptMsg->cardID,"\x00\xc2\x84\x94",4);
+                log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
+                
+                ret = readHead(ptMsg->cardID, CARD_MODE);
+                log_d("readHead = %d\r\n",ret);
+                
+                if(ret != NO_FIND_HEAD)
+                {
+                    log_d("read card success\r\n");     
+
+                    devID = ptMsg->devID;
+
+                    if(devID == READER1)
+                    {                    
+                        gOpenDoorTimer.flag = 1;
+                        gOpenDoorTimer.outTimer = 12000;
+                    }
+                    else if(devID == READER2)
+                    {
+                        gOpenDoor2Timer.flag = 1;
+                        gOpenDoor2Timer.outTimer = 12000;
+                    }
+                    
+
+        			/* 使用消息队列实现指针变量的传递 */
+        			if(xQueueSend(xCmdQueue,             /* 消息队列句柄 */
+        						 (void *) &devID,             /* 发送结构体指针变量ptReader的地址 */
+        						 (TickType_t)30) != pdPASS )
+        			{
+                        xQueueReset(xCmdQueue);
+                        DBG("send card2  queue is error!\r\n"); 
+                        //发送卡号失败蜂鸣器提示
+                        //或者是队列满                
+                    }
+                    else
+                    {
+                        log_d("2 cardid %02x,%02x,%02x,%02x,devid = %d\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3],ptMsg->devID);
+                        //打包数据                
+                        packetCard(ptMsg->cardID, jsonbuff);
+
+                        //发送数据到MQTT服务器
+                        len = strlen((const char*)jsonbuff);
+                        log_d("send = %d,buff = %s\r\n",len,jsonbuff);   
+                        
+                        len = mqttSendData(jsonbuff,len);                    
+
+                        //这里判断mqttSendData是否为0，若是，则需要写入到FLASH中去
+                        if(len == 0)
+                        {
+                            //写记录到FLASH
+                            writeRecord(jsonbuff,  strlen((const char*)jsonbuff));
+                        } 
+                    }
+                }
+                else
+                {
+                    log_d("read card error: not find card\r\n");
+                }  
+            }
+            else if(ptMsg->mode == REMOTE_OPEN_MODE) //远程开门
+            {
+                //发送开门指令
+
+                log_d("read card success\r\n");     
+                
+                devID = 1;
+                gOpenDoorTimer.flag = 1;
+                gOpenDoorTimer.outTimer = 12000;
+
+    //            ptCmd->cmd_len = 8;  
+    //            memcpy(ptCmd->cmd,openLeft,ptCmd->cmd_len);  
+                
     			/* 使用消息队列实现指针变量的传递 */
     			if(xQueueSend(xCmdQueue,             /* 消息队列句柄 */
     						 (void *) &devID,             /* 发送结构体指针变量ptReader的地址 */
@@ -184,58 +224,10 @@ static void vTaskDataProcess(void *pvParameters)
                     DBG("send card2  queue is error!\r\n"); 
                     //发送卡号失败蜂鸣器提示
                     //或者是队列满                
-                }
-                else
-                {
-                    log_d("2 cardid %02x,%02x,%02x,%02x,devid = %d\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3],ptMsg->devID);
-                    //打包数据                
-                    packetCard(ptMsg->cardID, jsonbuff);
-
-                    //发送数据到MQTT服务器
-                    len = strlen((const char*)jsonbuff);
-                    log_d("send = %d,buff = %s\r\n",len,jsonbuff);   
-                    
-                    len = mqttSendData(jsonbuff,len);                    
-
-                    //这里判断mqttSendData是否为0，若是，则需要写入到FLASH中去
-                    if(len == 0)
-                    {
-                        //写记录到FLASH
-                        writeRecord(jsonbuff,  strlen((const char*)jsonbuff));
-                    } 
-                }
+                } 
             }
-            else
-            {
-                log_d("read card error: not find card\r\n");
-            }  
-        }
-        else if(ptMsg->mode == REMOTE_OPEN_MODE) //远程开门
-        {
-            //发送开门指令
-
-            log_d("read card success\r\n");     
             
-            devID = 1;
-            gOpenDoorTimer.flag = 1;
-            gOpenDoorTimer.outTimer = 12000;
-
-//            ptCmd->cmd_len = 8;  
-//            memcpy(ptCmd->cmd,openLeft,ptCmd->cmd_len);  
-            
-			/* 使用消息队列实现指针变量的传递 */
-			if(xQueueSend(xCmdQueue,             /* 消息队列句柄 */
-						 (void *) &devID,             /* 发送结构体指针变量ptReader的地址 */
-						 (TickType_t)30) != pdPASS )
-			{
-                xQueueReset(xCmdQueue);
-                DBG("send card2  queue is error!\r\n"); 
-                //发送卡号失败蜂鸣器提示
-                //或者是队列满                
-            } 
-        }
-        
-        
+      
         /* 发送事件标志，表示任务正常运行 */        
         xEventGroupSetBits(xCreatedEventGroup, TASK_BIT_3); 
         vTaskDelay(30); 

@@ -201,7 +201,6 @@ static SYSERRORCODE_E SendToQueue(uint8_t *buf,int len,uint8_t authMode)
     else
     {
         dbh("SendToQueue",(char *)buf,len);
-//        log_d("SendToQueue buf = %s,len = %d\r\n",buf,len);
     } 
 
 
@@ -334,8 +333,9 @@ SYSERRORCODE_E OpenDoor ( uint8_t* msgBuf )
         //或者是队列满                
     }     
 
-//    TestFlash(CARD_MODE);
-    
+#if DEBUG_PRINT
+    TestFlash(CARD_MODE);
+#endif    
 	return result;
 }
 
@@ -829,10 +829,7 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
     gCardSortTimer.flag = 1;
     
     //2.保存卡号
-    log_d("<1>======mem perused = %3d%======<1>\r\n",mem_perused(SRAMIN));
     GetCardArray ((const uint8_t *)msgBuf,(const uint8_t *)"cardNo",&multipleCardNum,cardArray);
-    log_d("<2>======mem perused = %3d%======<2>\r\n",mem_perused(SRAMIN));    
-
     
     for(i=0;i<multipleCardNum;i++)
     { 
@@ -842,34 +839,7 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         log_d("%d / %d :cardNo = %s,asc = %s\r\n",multipleCardNum,i+1,cardArray[i],tmpAsc); 
         
         asc2bcd(tmpBcd, tmpAsc, CARD_NO_LEN, 1);        
-        tmpBcd[0] = 0x00;//韦根26最高位无数据
-
-
-        
-        
-//        result = SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);
-
-//        memset(buf,0x00,sizeof(buf));    
-//        if(result == NO_ERR)
-//        {
-//            //影响服务器
-//            result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);
-//        }
-//        else
-//        {
-//            //影响服务器
-//            result = modifyJsonItem(packetBaseJson(msgBuf,0),"cardNo",tmpAsc,0,buf);
-//        }
-//        
-//        if(result != NO_ERR)
-//        {            
-//            return result;
-//        }
-
-//        len = strlen((const char*)buf);
-//        
-//        mqttSendData(buf,len);  
-
+        tmpBcd[0] = 0x00;//韦根26最高位无数据     
         
         memset(buf,0x00,sizeof(buf));
         result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);        
@@ -880,6 +850,7 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
 
         //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
         ret = mqttSendData(buf,strlen((const char*)buf)); 
+        
         if(ret > 20)//随便一个长度
         {
             SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);            
