@@ -665,18 +665,18 @@ void sortPageCard(void)
     {
         log_d("sort page id the %d =%x\r\n",i,gSectorBuff[i].headData.id);
     }  
-#endif
-    
+#endif  
 
-    log_d("qSortpageCard success\r\n");
-    
     //写回数据
-    SPI_FLASH_BufferWrite(gSectorBuff, addr, HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));    
-
+    SPI_FLASH_BufferWrite(gSectorBuff, addr, HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));  
+    
 
 
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
 	log_d ( "sort FULL page card success，use time: %dms\r\n",iTime2 - iTime1 );  
+
+	
+    log_d("qSortpageCard success\r\n");
 }
 
 
