@@ -41,7 +41,7 @@
 #define READER2         2
 
 #define READMODE        1 
-#define DOWNLOAD_CARD_MODE 2
+#define SORT_CARD_MODE 2
 #define REMOTE_OPEN_MODE 3
 #define DEL_CARD_MODE 4
 

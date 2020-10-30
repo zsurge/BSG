@@ -39,11 +39,11 @@
 //IC卡
 #define AUTH_MODE_CARD      2
 //远程
-#define AUTH_MODE_REMOTE    3
+#define AUTH_MODE_REMOTE    8
 //解绑
-#define AUTH_MODE_UNBIND    4
+#define AUTH_MODE_UNBIND    5
 //绑定
-#define AUTH_MODE_BIND      5
+#define AUTH_MODE_BIND      6
 //二维码
 #define AUTH_MODE_QR        7
 

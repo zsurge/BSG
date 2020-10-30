@@ -712,7 +712,9 @@ void clearTemplateFRAM(void)
 
 static void eraseUserDataIndex ( void )
 {
-    ClearRecordIndex();
+    gRecordIndex.cardNoIndex = 0;
+    gRecordIndex.delCardNoIndex = 0;
+    gRecordIndex.accessRecoIndex = 0;
     optRecordIndex(&gRecordIndex,WRITE_PRARM);
 }
 
@@ -722,7 +724,7 @@ void eraseUserDataAll ( void )
 	int32_t iTime1, iTime2;
 	iTime1 = xTaskGetTickCount();	/* 记下开始时间 */
 	eraseHeadSector();
-//	eraseDataSector();
+	eraseDataSector();
     eraseUserDataIndex();
 	clearTemplateFRAM();
     initTemplateParam();	
@@ -762,15 +764,11 @@ void TestFlash ( uint8_t mode )
 	char buff[156] = {0};
     HEADINFO_STRU tmp;
 	uint32_t addr = 0;
-	uint32_t data_addr = 0;
 	uint16_t i = 0;
 	uint32_t num = 0;
 
-	if ( buff == NULL )
-	{
-		//log_d("my_malloc error\r\n");
-		return ;
-	}
+
+
 	
 	ClearRecordIndex();
     optRecordIndex(&gRecordIndex,READ_PRARM);
@@ -787,6 +785,8 @@ void TestFlash ( uint8_t mode )
 		num = gRecordIndex.delCardNoIndex;
 	}
 
+	
+    log_d("&&&&& the total sn = %d\r\n\r\n",num);
 
 	for ( i=0; i<num; i++ )
 	{

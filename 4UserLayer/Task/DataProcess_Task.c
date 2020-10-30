@@ -36,7 +36,7 @@
  *----------------------------------------------*/
 
 #define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
-#define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*20)
+#define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*12)
 
 /*----------------------------------------------*
  * 常量定义                                     *
@@ -70,7 +70,7 @@ void CreateDataProcessTask(void)
 static void vTaskDataProcess(void *pvParameters)
 {    
     BaseType_t xReturn = pdTRUE;/* 定义一个创建信息返回值，默认为pdPASS */
-    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(30); /* 设置最大等待时间为100ms */ 
+    const TickType_t xMaxBlockTime = pdMS_TO_TICKS(50); /* 设置最大等待时间为100ms */ 
     int ret = 0;
     int len = 0;
 
@@ -118,16 +118,20 @@ static void vTaskDataProcess(void *pvParameters)
             log_d("======vTaskDataProcess mem perused = %3d%======\r\n",mem_perused(SRAMIN));
 
             //写卡
-            if(ptMsg->mode == DOWNLOAD_CARD_MODE)
+            if(ptMsg->mode == SORT_CARD_MODE)
             {
-                ret = addCard(ptMsg->cardID,CARD_MODE);
-                log_d("addCard = %d\r\n",ret);
+//                ret = addCard(ptMsg->cardID,CARD_MODE);
+//                log_d("addCard = %d\r\n",ret);
+//                
+//                if(ret != 1)
+//                {
+//                   //1.添加用户失败，重启，继续添加
+//                   //2.排序
+//                }      
+
+                //这里进行整页排序
+                sortPageCard();
                 
-                if(ret != 1)
-                {
-                   //1.添加用户失败，重启，继续添加
-                   //2.排序
-                }              
             }
             else if(ptMsg->mode == DEL_CARD_MODE)
             {

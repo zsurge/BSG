@@ -63,6 +63,10 @@ int gConnectStatus = 0;
 int	gMySock = 0;
 uint8_t gUpdateDevSn = 0; 
 
+//static uint16_t ggcnt = 0;
+//static uint16_t ggsum = 0;
+
+
 
 
 READER_BUFF_STRU gReaderMsg;
@@ -192,7 +196,7 @@ static SYSERRORCODE_E SendToQueue(uint8_t *buf,int len,uint8_t authMode)
     /* 使用消息队列实现指针变量的传递 */
     if(xQueueSend(xCardIDQueue,              /* 消息队列句柄 */
                  (void *) &ptMsg,   /* 发送指针变量recv_buf的地址 */
-                 (TickType_t)30) != pdPASS )
+                 (TickType_t)50) != pdPASS )
     {
         DBG("the queue is full!\r\n");                
         xQueueReset(xCardIDQueue);
@@ -333,9 +337,9 @@ SYSERRORCODE_E OpenDoor ( uint8_t* msgBuf )
         //或者是队列满                
     }     
 
-#if DEBUG_PRINT
+//#if DEBUG_PRINT
     TestFlash(CARD_MODE);
-#endif    
+//#endif    
 	return result;
 }
 
@@ -359,9 +363,8 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
     uint8_t buf[MQTT_TEMP_LEN] = {0};
     uint8_t tmp[CARD_NO_LEN] = {0};    
     uint8_t cardNo[CARD_NO_BCD_LEN] = {0};
-    uint16_t len = 0;  
-    uint8_t ret = 0;
- 
+    uint32_t ret = 0;
+    int sendLen = 0;
 
     if(!msgBuf)
     {
@@ -383,9 +386,8 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
     
     log_d("add cardNo=  %02x, %02x, %02x, %02x\r\n",cardNo[0],cardNo[1],cardNo[2],cardNo[3]);
 
-
-    
     memset(buf,0x00,sizeof(buf));
+    
     //打包
     result = packetSingleAddCardJson(msgBuf,1,buf);
 
@@ -396,21 +398,22 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
         return result;
     }
 
-    len = strlen((char *)buf);
+    ret = addCard(cardNo,CARD_MODE);
+    log_d("addCard = %d\r\n",ret);
     
-    //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
-    ret = mqttSendData(buf,len); 
-    if(ret > 20) //这里是随便一个长度，为了避免跟错误代码冲突，错误代码表要改
+    if(ret >= 1)
     {
         gCardSortTimer.outTimer = 60000;
         gCardSortTimer.flag = 1; 
         
-        SendToQueue(cardNo,CARD_NO_BCD_LEN,2);            
-    } 
-    
-    //{"data":{"userId":788,"cardNo":"015AA890","status":"1"},"commandCode":"1012","deviceCode":"9A633E85F4084489F4F5"}
-
-
+        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
+        sendLen = mqttSendData(buf,strlen((const char*)buf)); 
+        
+        if(sendLen < 20)//随便一个长度
+        {
+            result = FLASH_W_ERR;     
+        }        
+    }  
     
 	return result;
 }
@@ -818,7 +821,8 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
     uint8_t cardArray[20][8] = {0};
     uint8_t multipleCardNum=0;    
     uint16_t i = 0;  
-    int ret = 0;    
+    int sendLen = 0;
+    uint32_t ret = 0;    
 
     if(!msgBuf)
     {
@@ -833,6 +837,7 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
     
     for(i=0;i<multipleCardNum;i++)
     { 
+//        ggsum++;
         memset(tmpAsc,0x00,sizeof(tmpAsc));
         memset(tmpBcd,0x00,sizeof(tmpBcd));
         memcpy(tmpAsc,cardArray[i],CARD_NO_LEN);
@@ -846,16 +851,40 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         if(result != NO_ERR)
         {            
             return result;
-        }       
+        }     
 
-        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
-        ret = mqttSendData(buf,strlen((const char*)buf)); 
+        ret = addCard(tmpBcd,CARD_MODE);
+        log_d("addCard = %d\r\n",ret);
         
-        if(ret > 20)//随便一个长度
+        if(ret >= 1)
         {
-            SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);            
-        }
+            //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
+            sendLen = mqttSendData(buf,strlen((const char*)buf)); 
+            
+            if(sendLen < 20)//随便一个长度
+            {
+                result = FLASH_W_ERR;     
+            }
+
+            if((ret/1024>=1) && (ret%1024==0))
+            {
+                SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2); //这里进行整页排序
+            }            
+        } 
+
+//        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
+//        ret = mqttSendData(buf,strlen((const char*)buf)); 
+//        
+//        if(ret > 20)//随便一个长度
+//        {
+//            SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);            
+//        }
+//        else
+//        {
+//           log_d("已发送，但是未保存\r\n");           
+//        }
         
+
     }
     
 	return result;

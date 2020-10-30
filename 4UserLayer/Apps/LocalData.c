@@ -288,7 +288,7 @@ static int Bin_Search(HEADINFO_STRU *num,int numsSize,int target)
 
 
 #if 1//#ifndef QUEUE_ADD_CARD
-uint8_t addCard(uint8_t *head,uint8_t mode)
+uint32_t addCard(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
 	uint16_t remainder = 0;
@@ -348,15 +348,15 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
         
 
         //3.判断是否写满一页，是的话，排序
-        if((remainder == HEAD_NUM_SECTOR-1) &&(remainder%(HEAD_NUM_SECTOR-1)==0))
-        {  
-            //读一页数据
-            SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
-            //排序
-            qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
-            //写回数据
-            SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
-        }
+//        if((remainder == HEAD_NUM_SECTOR-1) &&(remainder%(HEAD_NUM_SECTOR-1)==0))
+//        {  
+//            //读一页数据
+//            SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+//            //排序
+//            qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
+//            //写回数据
+//            SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+//        }
        
     }
 
@@ -375,7 +375,7 @@ uint8_t addCard(uint8_t *head,uint8_t mode)
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
 	log_d ( "add head成功，耗时: %dms\r\n",iTime2 - iTime1 );
 
-    return 1;
+    return gRecordIndex.cardNoIndex;
   
 }
 
@@ -581,7 +581,7 @@ void sortLastPageCard(void)
     uint8_t multiple = 0;
 	uint16_t remainder = 0;
 	
-	uint32_t addr = 0;
+	uint32_t addr = CARD_NO_HEAD_ADDR;
 
     int32_t iTime1, iTime2;
     
@@ -625,6 +625,61 @@ void sortLastPageCard(void)
 	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
 	log_d ( "sort last page card success，use time: %dms\r\n",iTime2 - iTime1 );  
 }
+
+
+
+void sortPageCard(void)
+{
+    uint8_t multiple = 0;
+	
+	uint32_t addr = CARD_NO_HEAD_ADDR;
+
+    int32_t iTime1, iTime2;
+    
+    iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
+   
+   //1.先判定当前有多少个卡号;
+    ClearRecordIndex();
+    optRecordIndex(&gRecordIndex,READ_PRARM);
+    
+	addr = CARD_NO_HEAD_ADDR;    
+    multiple = gRecordIndex.cardNoIndex / HEAD_NUM_SECTOR;
+
+    if(multiple<1)
+    {
+        return;//这里应该不太可能，因为只有大于1024的时候，才会触发这个条件
+    }
+
+    memset(gSectorBuff,0x00,sizeof(gSectorBuff));
+    
+    //2.计算当前页地址
+    addr += (multiple-1) * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
+
+    //3.读当前页
+    SPI_FLASH_BufferRead(gSectorBuff, addr ,HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
+    //排序
+    qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
+
+#if DEBUG_PRINT
+    for(int i=0;i<HEAD_NUM_SECTOR;i++)
+    {
+        log_d("sort page id the %d =%x\r\n",i,gSectorBuff[i].headData.id);
+    }  
+#endif
+    
+
+    log_d("qSortpageCard success\r\n");
+    
+    //写回数据
+    SPI_FLASH_BufferWrite(gSectorBuff, addr, HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));    
+
+
+
+	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
+	log_d ( "sort FULL page card success，use time: %dms\r\n",iTime2 - iTime1 );  
+}
+
+
 
 static void optAccessIndex(uint8_t mode)
 {
