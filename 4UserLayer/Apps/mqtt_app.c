@@ -441,7 +441,6 @@ log_d("2 gDevBaseParam.deviceCode.qrSn = %s,gDevBaseParam.deviceCode.qrSnLen = %
 MQTT_reconnect:    
 	transport_close ( gMySock );    
 	log_d ( "mqtt thread exit.try again 3 sec\r\n" );  
-
     vTaskDelay (200);
     goto MQTT_START;        
 }
