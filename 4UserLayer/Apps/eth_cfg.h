@@ -34,8 +34,8 @@
  *----------------------------------------------*/
 //#define   HOST_NAME       "192.168.110.79"     //服务器IP地址 测试专用 
 //#define   HOST_NAME       "192.168.110.109"     //服务器IP地址 线下 
-//#define   HOST_NAME         "mqtt.bsgoal.net.cn"
-#define   HOST_NAME         "120.25.169.59"
+#define   HOST_NAME         "mqtt.bsgoal.net.cn"
+//#define   HOST_NAME         "120.25.169.59"
 
 //#ifdef LWIP_DNS
 //#define HOST_NAME "mqtt.bsgoal.net.cn"
