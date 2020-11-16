@@ -102,11 +102,11 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 		return NO_FIND_HEAD;
 	}	
 
-	if(headBuff[0] == 0x01)
-	{
-	    log_d("card status:del\r\n");
-	    return NO_FIND_HEAD; //已删除卡
-	}
+//	if(headBuff[0] == 0x01)
+//	{
+//	    log_d("card status:del\r\n");
+//	    return NO_FIND_HEAD; //已删除卡
+//	}
 
     iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
 
@@ -165,7 +165,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
         if(ret != NO_FIND_HEAD)
         {
             log_d("find it\r\n");
-            return ret;
+            return ret+multiple*HEAD_NUM_SECTOR;//modify 2020.11.07
         }
     }    
     
@@ -177,6 +177,7 @@ int readHead(uint8_t *headBuff,uint8_t mode)
         //2.读取第一个卡号和最后一个卡号；
 //        ret = FRAM_Read (FM24V10_1, address, gSectorBuff, HEAD_NUM_SECTOR * CARD_USER_LEN);
         SPI_FLASH_BufferRead(gSectorBuff, address, HEAD_NUM_SECTOR * CARD_USER_LEN);
+        //只读头尾
         
 //        if(ret == 0)
 //        {
@@ -187,7 +188,9 @@ int readHead(uint8_t *headBuff,uint8_t mode)
         
         if(head.headData.id >= gSectorBuff[0].headData.id && head.headData.id <= gSectorBuff[HEAD_NUM_SECTOR-1].headData.id)
         {
+            //在范围内才读整页
             ret = Bin_Search(gSectorBuff,HEAD_NUM_SECTOR,head.headData.id);
+            
             if(ret != NO_FIND_HEAD)
             {
             	iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
@@ -295,7 +298,7 @@ uint32_t addCard(uint8_t *head,uint8_t mode)
 	uint32_t addr = 0;
 	uint32_t curIndex = 0;
 
-    HEADINFO_STRU tmpCard;
+    HEADINFO_STRU tmpCard,rxCard;
 
     int32_t iTime1, iTime2;
 
@@ -359,6 +362,13 @@ uint32_t addCard(uint8_t *head,uint8_t mode)
 //        }
        
     }
+
+    SPI_FLASH_BufferRead(&rxCard, addr, 1*sizeof(HEADINFO_STRU));
+
+    if(tmpCard.headData.id != rxCard.headData.id)
+    {
+        return 0;//写不成功
+    }    
 
 
 	if ( mode == CARD_MODE )

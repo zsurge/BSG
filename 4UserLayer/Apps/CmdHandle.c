@@ -252,11 +252,10 @@ int mqttSendData(uint8_t *payload_out,uint16_t payload_out_len)
    else
    {
         log_d("MQTT Lost the connect!!!\r\n");
-        //这里需要写离线记录
    }
   
 
-   return len;
+   return rc;
 }
 
 
@@ -388,15 +387,6 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
 
     memset(buf,0x00,sizeof(buf));
     
-    //打包
-    result = packetSingleAddCardJson(msgBuf,1,buf);
-
-    log_d("packetSingleAddCardJson %s,len = %d\r\n",buf,strlen((char *)buf));
-
-    if(result != NO_ERR)
-    {
-        return result;
-    }
 
     ret = addCard(cardNo,CARD_MODE);
     log_d("addCard = %d\r\n",ret);
@@ -406,14 +396,28 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
         gCardSortTimer.outTimer = 60000;
         gCardSortTimer.flag = 1; 
         
-        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
-        sendLen = mqttSendData(buf,strlen((const char*)buf)); 
-        
-        if(sendLen < 20)//随便一个长度
-        {
-            result = FLASH_W_ERR;     
-        }        
+        //为了防止漏下，先写入到FLASH中,OK后应答服务器 
+        result = packetSingleAddCardJson(msgBuf,1,buf);        
+//        log_d("packetSingleAddCardJson %s,len = %d\r\n",buf,strlen((char *)buf)); 
     }  
+    else
+    {
+        //为了防止漏下，先写入到FLASH中,OK后应答服务器 
+        result = packetSingleAddCardJson(msgBuf,0,buf);        
+        //        log_d("packetSingleAddCardJson %s,len = %d\r\n",buf,strlen((char *)buf));        
+    }
+
+    if(result != NO_ERR)
+    {
+        return result;
+    }
+    
+    sendLen = mqttSendData(buf,strlen((const char*)buf)); 
+    
+    if(sendLen < 20)//随便一个长度
+    {
+        result = FLASH_W_ERR;     
+    }      
     
 	return result;
 }
@@ -847,43 +851,37 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         tmpBcd[0] = 0x00;//韦根26最高位无数据     
         
         memset(buf,0x00,sizeof(buf));
-        result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf);        
-        if(result != NO_ERR)
-        {            
-            return result;
-        }     
+
 
         ret = addCard(tmpBcd,CARD_MODE);
         log_d("addCard = %d\r\n",ret);
         
         if(ret >= 1)
         {
-            //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
-            sendLen = mqttSendData(buf,strlen((const char*)buf)); 
-            
-            if(sendLen < 20)//随便一个长度
-            {
-                result = FLASH_W_ERR;     
-            }
+            result = modifyJsonItem(packetBaseJson(msgBuf,1),"cardNo",tmpAsc,0,buf); 
+        }
+        else
+        {
+            result = modifyJsonItem(packetBaseJson(msgBuf,0),"cardNo",tmpAsc,0,buf); 
+        }
 
-            if((ret/1024>=1) && (ret%1024==0))
-            {
-                SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2); //这里进行整页排序
-            }            
-        } 
-
-//        //为了防止重复下载，先应答服务器，若应答OK，再写入到FLASH中
-//        ret = mqttSendData(buf,strlen((const char*)buf)); 
-//        
-//        if(ret > 20)//随便一个长度
-//        {
-//            SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2);            
-//        }
-//        else
-//        {
-//           log_d("已发送，但是未保存\r\n");           
-//        }
+        if(result != NO_ERR)
+        {            
+            return result;
+        }     
         
+        //为了防止漏下，先写入到FLASH中,OK后应答服务器 
+        sendLen = mqttSendData(buf,strlen((const char*)buf)); 
+        
+        if(sendLen < 20)//随便一个长度
+        {
+            result = FLASH_W_ERR;     
+        }
+
+        if((ret/1024 >= 1) && (ret%1024 == 0))
+        {
+            SendToQueue(tmpBcd,CARD_NO_BCD_LEN,2); //这里进行整页排序
+        }   
 
     }
     
