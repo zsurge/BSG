@@ -44,6 +44,7 @@
 #define SORT_CARD_MODE 2
 #define REMOTE_OPEN_MODE 3
 #define DEL_CARD_MODE 4
+#define MANUAL_SORT     (10)
 
     
 //事件标志

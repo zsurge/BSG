@@ -106,7 +106,6 @@ static void AppTaskCreate (void)
 //    CreateCommTask();       //1
     CreateOpenDoorTask();       //1  
 
-
     //¶Á¿¨Æ÷
     CreateReaderTask();     //2    
 //    CreateRs485ReaderTask();

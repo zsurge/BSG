@@ -37,7 +37,7 @@
 
 #define AUTH_MODE_RELIEVECONTROL        1
 //IC¿¨
-#define AUTH_MODE_CARD      2
+#define AUTH_MODE_CARD      9
 //Ô¶³Ì
 #define AUTH_MODE_REMOTE    8
 //½â°ó

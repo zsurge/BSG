@@ -795,7 +795,7 @@ void TestFlash ( uint8_t mode )
 		
         SPI_FLASH_BufferRead(&tmp, addr+i*sizeof ( HEADINFO_STRU ), sizeof(HEADINFO_STRU));		
 
-		log_d("card%d = %x,sn = %02x,%02x,%02x,%02x\r\n ",i,tmp.headData.id,tmp.headData.sn[0],tmp.headData.sn[1],tmp.headData.sn[2],tmp.headData.sn[3]);
+		log_e("card%d = %x,sn = %02x,%02x,%02x,%02x\r\n ",i,tmp.headData.id,tmp.headData.sn[0],tmp.headData.sn[1],tmp.headData.sn[2],tmp.headData.sn[3]);
 	}
 
 //	for ( i=0; i<num; i++ )

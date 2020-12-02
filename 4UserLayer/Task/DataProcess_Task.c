@@ -38,6 +38,8 @@
 #define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
 #define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*12)
 
+#define SORT_FLAG
+
 /*----------------------------------------------*
  * 常量定义                                     *
  *----------------------------------------------*/
@@ -90,7 +92,10 @@ static void vTaskDataProcess(void *pvParameters)
         {
             log_d("-----start sort-----\r\n");
             gCardSortTimer.flag = 0;
+
+            #ifdef SORT_FLAG
             sortLastPageCard();
+            #endif
         } 
 
         //读取缓冲区，若有数据，则先上送历史记录 
@@ -117,22 +122,22 @@ static void vTaskDataProcess(void *pvParameters)
         
             log_d("======vTaskDataProcess mem perused = %3d%======\r\n",mem_perused(SRAMIN));
 
-            //写卡
+            //排序
             if(ptMsg->mode == SORT_CARD_MODE)
-            {
-//                ret = addCard(ptMsg->cardID,CARD_MODE);
-//                log_d("addCard = %d\r\n",ret);
-//                
-//                if(ret != 1)
-//                {
-//                   //1.添加用户失败，重启，继续添加
-//                   //2.排序
-//                }      
-
+            {   
                 //这里进行整页排序
+                #ifdef SORT_FLAG
                 sortPageCard();
+                #endif
                 
             }
+            else if(ptMsg->mode == MANUAL_SORT)
+            {
+                //针对所有数据进行排序
+                #ifdef SORT_FLAG
+                manualSortCard();
+                #endif
+            }            
             else if(ptMsg->mode == DEL_CARD_MODE)
             {
                 ret = delHead(ptMsg->cardID,CARD_MODE);
@@ -229,6 +234,8 @@ static void vTaskDataProcess(void *pvParameters)
                     //发送卡号失败蜂鸣器提示
                     //或者是队列满                
                 } 
+
+                
             }
             
       

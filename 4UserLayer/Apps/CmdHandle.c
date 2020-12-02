@@ -656,8 +656,8 @@ SYSERRORCODE_E GetDevInfo ( uint8_t* msgBuf )
 {
 	SYSERRORCODE_E result = NO_ERR;
     uint8_t buf[MQTT_TEMP_LEN] = {0};
-    uint8_t *identification;
     uint16_t len = 0;
+    uint8_t tmpBcd[CARD_NO_BCD_LEN] = {0};
 
     if(!msgBuf)
     {
@@ -676,9 +676,10 @@ SYSERRORCODE_E GetDevInfo ( uint8_t* msgBuf )
 
     log_d("GetDevInfo len = %d,buf = %s\r\n",len,buf);
 
-    mqttSendData(buf,len);
-    
-    my_free(identification);
+    mqttSendData(buf,len);    
+
+    //这里添加一个指令，用来对所有数据进行排序    
+    SendToQueue(tmpBcd,CARD_NO_BCD_LEN,10); //这里进行整页排序
     
 	return result;
 

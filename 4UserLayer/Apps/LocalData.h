@@ -86,6 +86,11 @@ void sortLastPageCard(void);
 //整页排序
 void sortPageCard(void);
 
+//针对所有数据排序
+void manualSortCard(void);
+//__attribute__ ((section ("new_section"))) void function(void);
+
+
 
 //添加卡号
 uint32_t addCard(uint8_t *head,uint8_t mode);

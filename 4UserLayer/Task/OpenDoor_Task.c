@@ -87,7 +87,7 @@ static void vTaskOpenDoor(void *pvParameters)
             gOpenDoor2Timer.flag = 0;
             log_d("close 2 door\r\n");
             SW2_HI();                    
-        }        
+        }          
 
         xReturn = xQueueReceive( xCmdQueue,    /* 消息队列的句柄 */
                                  (void *)&devID,  /*这里获取的是结构体的地址 */
