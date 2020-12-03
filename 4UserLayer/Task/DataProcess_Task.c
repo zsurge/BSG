@@ -152,7 +152,7 @@ static void vTaskDataProcess(void *pvParameters)
             else if(ptMsg->mode == READMODE) //¶Á¿¨
             {      
             
-    //            memcpy(ptMsg->cardID,"\x00\xc2\x84\x94",4);
+//                memcpy(ptMsg->cardID,"\x00\xfb\x4b\xfb",4);
                 log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
                 
                 ret = readHead(ptMsg->cardID, CARD_MODE);

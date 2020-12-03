@@ -57,6 +57,8 @@
 static uint8_t checkFlashSpace ( uint8_t mode );
 
 static int Bin_Search(HEADINFO_STRU *num,int numsSize,int target);
+static int Bin_Search_addr(uint32_t startAddr,int numsSize,int target);
+
 static void swap(uint32_t *x, uint32_t *y);
 static int selectPivotMedianOfThree(uint32_t *arr,uint32_t low,uint32_t high);
 static void insertSort(uint32_t *arr, uint32_t m, uint32_t n);
@@ -82,9 +84,6 @@ static uint8_t checkFlashSpace ( uint8_t mode )
 	return 0;
 }
 
-
-
-
 int readHead(uint8_t *headBuff,uint8_t mode)
 {
 	uint8_t i = 0;
@@ -96,24 +95,23 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 	int32_t iTime1, iTime2;
 	 
 	int ret = 0;
-    HEADINFO_STRU head;
+	
+    HEADINFO_STRU targetData,firstData,lastData;
 
 	if ( headBuff == NULL )
 	{
 		return NO_FIND_HEAD;
-	}	
+	}
+	
+	if(headBuff[0] == 0x01)
+	{
+	    log_d("card status:del\r\n");
+	    return NO_FIND_HEAD; //已删除卡
+	}  
+	
+	memcpy(targetData.headData.sn,headBuff,sizeof(targetData.headData.sn));
 
-//	if(headBuff[0] == 0x01)
-//	{
-//	    log_d("card status:del\r\n");
-//	    return NO_FIND_HEAD; //已删除卡
-//	}
-
-    iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
-
-	memcpy(head.headData.sn,headBuff,sizeof(head.headData.sn));
-
-    log_d("want find head.headData.id = %x,sn = %02x,%02x,%02x,%02x\r\n",head.headData.id,head.headData.sn[0],head.headData.sn[1],head.headData.sn[2],head.headData.sn[3]);
+    log_d("want find head.headData.id = %x,sn = %02x,%02x,%02x,%02x\r\n",targetData.headData.id,targetData.headData.sn[0],targetData.headData.sn[1],targetData.headData.sn[2],targetData.headData.sn[3]);
 	
 
     ClearRecordIndex();
@@ -137,35 +135,32 @@ int readHead(uint8_t *headBuff,uint8_t mode)
     //1.读取单页或者多页最后一页的地址
     address += multiple * HEAD_NUM_SECTOR  * CARD_USER_LEN;
 
-    log_d("addr = %x,multiple = %d,remainder=%d\r\n",address,multiple,remainder);
+    log_d("addr = %d,multiple = %d,remainder=%d\r\n",address,multiple,remainder);
     
 
-    memset(gSectorBuff,0x00,sizeof(gSectorBuff));
+    //2.读取最后一页第一个卡号和最后一个卡号；
+
+    firstData.headData.id = 0;
+    lastData.headData.id = 0;   
+    
+    iTime1 = xTaskGetTickCount();   /* 记下开始时间 */
     
     //2.读取最后一页第一个卡号和最后一个卡号；
-//    ret = FRAM_Read (FM24V10_1, address, gSectorBuff, (remainder)* CARD_USER_LEN);
-    SPI_FLASH_BufferRead(gSectorBuff, address, (remainder)* CARD_USER_LEN);
-
+    SPI_FLASH_BufferRead(&firstData, address, CARD_USER_LEN);
+    SPI_FLASH_BufferRead(&lastData, address+(remainder-1)* CARD_USER_LEN, CARD_USER_LEN);
     
-    log_d("FRAM_Read SUCCESS addr = %x,remainder = %d\r\n",address,remainder);
+    log_d("firstData = %x,lastData = %x\r\n",firstData.headData.id,lastData.headData.id);   
     
-//    for(i=0;i<remainder;i++)
-//    {
-//        log_d("add = %x,id =%x,sn = %02x,%02x,%02x,%02x,flashAddr = %d\r\n",address,gSectorBuff[i].headData.id,sectorBuff[i].headData.sn[0],sectorBuff[i].headData.sn[1],sectorBuff[i].headData.sn[2],sectorBuff[i].headData.sn[3],sectorBuff[i].flashAddr);
-//    }    
-    
-    log_d("head = %x,last page %x,%x\r\n",head.headData.id,gSectorBuff[0].headData.id,gSectorBuff[remainder-1].headData.id);
- 
-    if((head.headData.id >= gSectorBuff[0].headData.id) && (head.headData.id <= gSectorBuff[remainder-1].headData.id))
+    if((targetData.headData.id >= firstData.headData.id) && (targetData.headData.id <= lastData.headData.id))
     {
-    
-        ret = Bin_Search(gSectorBuff,remainder,head.headData.id);
+        ret = Bin_Search_addr(address,remainder,targetData.headData.id);       
 
-        log_d("1.Bin_Search flash index = %d\r\n",ret);
+        log_d("1.Bin_Search_addr index = %d\r\n",ret);
         
         if(ret != NO_FIND_HEAD)
         {
-            log_d("find it\r\n");
+            iTime2 = xTaskGetTickCount();	/* 记下结束时间 */
+            log_d ( "find it，use %d ms\r\n",iTime2 - iTime1); 
             return ret+multiple*HEAD_NUM_SECTOR;//modify 2020.11.07
         }
     }    
@@ -175,22 +170,19 @@ int readHead(uint8_t *headBuff,uint8_t mode)
         address = CARD_NO_HEAD_ADDR;//从零开始读;
         address += i * HEAD_NUM_SECTOR  * CARD_USER_LEN;
         
+        firstData.headData.id = 0;
+        lastData.headData.id = 0;  
+        
         //2.读取第一个卡号和最后一个卡号；
-//        ret = FRAM_Read (FM24V10_1, address, gSectorBuff, HEAD_NUM_SECTOR * CARD_USER_LEN);
-        SPI_FLASH_BufferRead(gSectorBuff, address, HEAD_NUM_SECTOR * CARD_USER_LEN);
-        //只读头尾
+        SPI_FLASH_BufferRead(&firstData, address, CARD_USER_LEN);
+        SPI_FLASH_BufferRead(&lastData, address+(HEAD_NUM_SECTOR-1)* CARD_USER_LEN, CARD_USER_LEN);
         
-//        if(ret == 0)
-//        {
-//            log_e("read fram error\r\n");
-//            return NO_FIND_HEAD; 
-//        }  
-        log_d("head = %x,the %d page,addr = %x, first value =%x,last value=%x\r\n",head.headData.id,i,address,gSectorBuff[0].headData.id,gSectorBuff[HEAD_NUM_SECTOR-1].headData.id);
+        log_d("firstData = %x,lastData = %x\r\n",firstData.headData.id,lastData.headData.id);    
         
-        if(head.headData.id >= gSectorBuff[0].headData.id && head.headData.id <= gSectorBuff[HEAD_NUM_SECTOR-1].headData.id)
+        if((targetData.headData.id >= firstData.headData.id) && (targetData.headData.id <= lastData.headData.id))
         {
             //在范围内才读整页
-            ret = Bin_Search(gSectorBuff,HEAD_NUM_SECTOR,head.headData.id);
+            ret = Bin_Search_addr(address,HEAD_NUM_SECTOR,targetData.headData.id);
             
             if(ret != NO_FIND_HEAD)
             {
@@ -288,10 +280,37 @@ static int Bin_Search(HEADINFO_STRU *num,int numsSize,int target)
     return NO_FIND_HEAD;
 }
 
+static int Bin_Search_addr(uint32_t startAddr,int numsSize,int target)
+{
+	int low = 0,high = numsSize-1,mid;
+	HEADINFO_STRU tmpData;
+	    
+	while(low <= high)
+	{
+		mid = low + ((high - low) >> 1); //获取中间值
+		
+        SPI_FLASH_BufferRead(&tmpData, startAddr+(mid)*CARD_USER_LEN, CARD_USER_LEN);    
+//        log_d("tmpData.%x\r\n",tmpData.headData.sn);
+        
+		if(tmpData.headData.id == target)
+		{
+		    return mid;
+		}
+		else if(tmpData.headData.id < target)
+		{
+		    low = mid+1;//mid已经交换过了,low往后移一位
+		}
+		else
+		{
+		    high = mid-1; //mid已经交换过了,right往前移一位
+		}
+	}        
+    return NO_FIND_HEAD;
+}
 
 
 
-#if 1//#ifndef QUEUE_ADD_CARD
+
 uint32_t addCard(uint8_t *head,uint8_t mode)
 {
     uint8_t multiple = 0;
@@ -349,19 +368,6 @@ uint32_t addCard(uint8_t *head,uint8_t mode)
         SPI_FLASH_BufferWrite(&tmpCard, addr,1*sizeof(HEADINFO_STRU));
 
         log_d("add = %d,multiple = %d,remainder=%d\r\n",addr,multiple,remainder);
-        
-
-        //3.判断是否写满一页，是的话，排序
-//        if((remainder == HEAD_NUM_SECTOR-1) &&(remainder%(HEAD_NUM_SECTOR-1)==0))
-//        {  
-//            //读一页数据
-//            SPI_FLASH_BufferRead(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
-//            //排序
-//            qSortCard(gSectorBuff,HEAD_NUM_SECTOR);
-//            //写回数据
-//            SPI_FLASH_BufferWrite(gSectorBuff, multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU), HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU));            
-//        }
-       
     }
 
     SPI_FLASH_BufferRead(&rxCard, addr, 1*sizeof(HEADINFO_STRU));
@@ -391,13 +397,12 @@ uint32_t addCard(uint8_t *head,uint8_t mode)
 }
 
 
-#endif
 
 
 
 int delHead(uint8_t *headBuff,uint8_t mode)
 {
-	int ret = 0;
+	int nums = 0;
 	uint8_t multiple = 0;
 	uint16_t remainder = 0;
     HEADINFO_STRU tmpCard;
@@ -409,42 +414,63 @@ int delHead(uint8_t *headBuff,uint8_t mode)
 	}	
 
     //1.查找要删除的卡号
-    ret = readHead(headBuff,CARD_MODE);
+    nums = readHead(headBuff,CARD_MODE);
 
-    if(ret == NO_FIND_HEAD)
+    if(nums == NO_FIND_HEAD)
     {
         return NO_FIND_HEAD;
     }
 
     //2.计算要删除卡号的地址
-	multiple = ret / HEAD_NUM_SECTOR;
-	remainder = ret % HEAD_NUM_SECTOR;
+	multiple = nums / HEAD_NUM_SECTOR;
+	remainder = nums % HEAD_NUM_SECTOR;
 	
     addr += (multiple * HEAD_NUM_SECTOR + remainder)  * sizeof(HEADINFO_STRU);
+
+    log_d("want del cardid addr = %d\r\n",addr);    
 
     //3.将要删除的卡号置全0    
     tmpCard.headData.id = 0;
     SPI_FLASH_BufferWrite(&tmpCard, addr,1*sizeof(HEADINFO_STRU));        
 
 
+    addr = CARD_NO_HEAD_ADDR; 
+
     //4.对这一页重新排序
-    if(remainder == 0 && multiple >= 1)
-    {     
-        addr = (multiple-1) * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
-        ret = HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU);
+    if(multiple >= 1)
+    {
+        addr += (multiple-1) * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
+        nums = HEAD_NUM_SECTOR;
     }
     else
-    { 
-        addr = multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
-        ret = remainder * sizeof(HEADINFO_STRU);    
+    {
+        addr = CARD_NO_HEAD_ADDR;
+        ClearRecordIndex();
+        optRecordIndex(&gRecordIndex,READ_PRARM);        
+        nums = gRecordIndex.cardNoIndex % HEAD_NUM_SECTOR;
     }
+
     
-    SPI_FLASH_BufferRead(gSectorBuff, addr ,ret);            
+//    if(remainder == 0 && multiple >= 1)
+//    {     
+//        addr = (multiple-1) * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
+//        ret = HEAD_NUM_SECTOR * sizeof(HEADINFO_STRU);
+//    }
+//    else
+//    { 
+//        addr = multiple * HEAD_NUM_SECTOR  * sizeof(HEADINFO_STRU);
+//        ret = remainder * sizeof(HEADINFO_STRU);    
+//    }
+
+    memset(gSectorBuff,0x00,sizeof(gSectorBuff));    
+    SPI_FLASH_BufferRead(gSectorBuff, addr ,nums* sizeof(HEADINFO_STRU));            
     //排序
-    qSortCard(gSectorBuff,ret/sizeof(HEADINFO_STRU));
+    qSortCard(gSectorBuff,nums);
+    //写回数据
+    SPI_FLASH_BufferWrite(gSectorBuff, addr, nums* sizeof(HEADINFO_STRU));   
 
     #if DEBUG_PRINT
-    for(int i=0;i<ret/sizeof(HEADINFO_STRU);i++)
+    for(int i=0;i<nums;i++)
     {
         log_d("del card id =%x\r\n",gSectorBuff[i].headData.id);
     }  
@@ -453,9 +479,7 @@ int delHead(uint8_t *headBuff,uint8_t mode)
 
     log_d("qSortCard success\r\n");
     
-    //写回数据
-    SPI_FLASH_BufferWrite(gSectorBuff, addr, ret);    
-    
+
     return 1;
   
 }
