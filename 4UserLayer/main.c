@@ -107,8 +107,8 @@ static void AppTaskCreate (void)
     CreateOpenDoorTask();       //1  
 
     //读卡器
-    CreateReaderTask();     //2    
-//    CreateRs485ReaderTask();
+//    CreateReaderTask();     //2    
+    CreateRs485ReaderTask();
 
     //卡数据处理
     CreateDataProcessTask();        //3

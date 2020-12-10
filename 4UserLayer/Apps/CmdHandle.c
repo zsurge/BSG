@@ -352,9 +352,6 @@ SYSERRORCODE_E AbnormalAlarm ( uint8_t* msgBuf )
 	return result;
 }
 
-
-
-
 SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
 {
 	SYSERRORCODE_E result = NO_ERR;
@@ -381,7 +378,7 @@ SYSERRORCODE_E AddCardNo ( uint8_t* msgBuf )
     memset(cardNo,0x00,sizeof(cardNo));
     asc2bcd(cardNo, tmp, CARD_NO_LEN, 1); 
 
-    cardNo[0] = 0x00;//韦根26最高位无数据
+    cardNo[0] = 0x00;//韦根26最高位无数据  ；二维码读卡器则需要韦根34
     
     log_d("add cardNo=  %02x, %02x, %02x, %02x\r\n",cardNo[0],cardNo[1],cardNo[2],cardNo[3]);
 
@@ -710,7 +707,7 @@ static SYSERRORCODE_E DelCardSingle( uint8_t* msgBuf )
     asc2bcd(tmp, cardNo, CARD_NO_LEN, 1);        
     log_d("cardNo: %02x %02x %02x %02x\r\n",tmp[0],tmp[1],tmp[2],tmp[3]);    
 
-    tmp[0] = 0x00;
+    tmp[0] = 0x00;//韦根26最高位无数据  ；二维码读卡器则需要韦根34
 
     //1.查找要删除的卡号
     ret = readHead(tmp,CARD_MODE);
@@ -849,7 +846,7 @@ static SYSERRORCODE_E DownLoadCardID ( uint8_t* msgBuf )
         log_d("%d / %d :cardNo = %s,asc = %s\r\n",multipleCardNum,i+1,cardArray[i],tmpAsc); 
         
         asc2bcd(tmpBcd, tmpAsc, CARD_NO_LEN, 1);        
-        tmpBcd[0] = 0x00;//韦根26最高位无数据     
+        tmpBcd[0] = 0x00;//韦根26最高位无数据  ；二维码读卡器则需要韦根34
         
         memset(buf,0x00,sizeof(buf));
 

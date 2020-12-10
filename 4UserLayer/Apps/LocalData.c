@@ -103,11 +103,11 @@ int readHead(uint8_t *headBuff,uint8_t mode)
 		return NO_FIND_HEAD;
 	}
 	
-	if(headBuff[0] == 0x01)
-	{
-	    log_d("card status:del\r\n");
-	    return NO_FIND_HEAD; //ÒÑÉ¾³ý¿¨
-	}  
+//	if(headBuff[0] == 0x01)
+//	{
+//	    log_d("card status:del\r\n");
+//	    return NO_FIND_HEAD; //ÒÑÉ¾³ý¿¨
+//	}  
 	
 	memcpy(targetData.headData.sn,headBuff,sizeof(targetData.headData.sn));
 

@@ -96,6 +96,7 @@ void Insertchar(char *src,char*desc,char c);
 
 uint8_t compareArray(uint8_t *array1,uint8_t *array2,int len);
 
+void reverseArray(uint8_t *array);
 
 
 

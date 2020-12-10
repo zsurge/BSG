@@ -68,7 +68,7 @@ TaskHandle_t xHandleTaskReader = NULL;
  *----------------------------------------------*/
 static void vTaskReader(void *pvParameters);
 
-static void reverseArray(uint8_t *array);
+
 
 void CreateReaderTask(void)
 {
@@ -81,20 +81,6 @@ void CreateReaderTask(void)
                 (TaskHandle_t*  )&xHandleTaskReader);
 }
 
-void reverseArray(uint8_t *array) 
-{
-    int i,temp;
-    int size = sizeof(array)/sizeof(array[0]);
-
-    
-    for(i=0; i<size/2; i++)
-    {
-        temp = array[i];
-        array[i] = array[size-i-1];
-        array[size-i-1] = temp;
-    }   
-
-}
 
 
 
