@@ -101,7 +101,7 @@ static void vTaskOpenDoor(void *pvParameters)
                 log_d("open 1 door\r\n");
                 SW1_LOW();  
             }
-            else if(devID == READER1)
+            else if(devID == READER2)
             {
                 log_d("open 2 door\r\n");
                 SW2_LOW();

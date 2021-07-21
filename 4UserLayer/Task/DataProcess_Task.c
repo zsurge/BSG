@@ -35,7 +35,7 @@
  * ºê¶¨Òå                                       *
  *----------------------------------------------*/
 
-#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 6) 
+#define DATAPROC_TASK_PRIO		(tskIDLE_PRIORITY + 7) 
 #define DATAPROC_STK_SIZE 		(configMINIMAL_STACK_SIZE*12)
 
 #define SORT_FLAG
@@ -153,7 +153,7 @@ static void vTaskDataProcess(void *pvParameters)
             memcpy(tmpCardNo,ptMsg->cardID,sizeof(ptMsg->cardID));
             devID = ptMsg->devID;
 //                memcpy(ptMsg->cardID,"\x00\xfb\x4b\xfb",4);
-//            log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
+            log_d("test cardid %02x,%02x,%02x,%02x\r\n",ptMsg->cardID[0],ptMsg->cardID[1],ptMsg->cardID[2],ptMsg->cardID[3]);            
 
 //            ret = readHead(ptMsg->cardID, CARD_MODE);
             ret = readHead(tmpCardNo, CARD_MODE);

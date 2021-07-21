@@ -62,6 +62,7 @@
 #include "Watchdog_Task.h"
 #include "DataProcess_Task.h"
 #include "rs485Reader_Task.h"
+#include "rs485Reader2_Task.h"
 #include "OpenDoor_Task.h"
 
 
