@@ -38,7 +38,7 @@
 /*----------------------------------------------*
  * ∫Í∂®“Â                                       *
  *----------------------------------------------*/
-#define KEY_STK_SIZE        (configMINIMAL_STACK_SIZE*4)
+#define KEY_STK_SIZE        (configMINIMAL_STACK_SIZE)
 #define KEY_TASK_PRIO	    ( tskIDLE_PRIORITY + 3)
 
 /*----------------------------------------------*

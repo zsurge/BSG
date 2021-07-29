@@ -42,10 +42,6 @@
 #define READER_TASK_PRIO	    ( tskIDLE_PRIORITY + 1)
 #define READER_STK_SIZE 		(configMINIMAL_STACK_SIZE*8)
 
-
-
-
-
 typedef union
 {
 	uint32_t id;        //¿¨ºÅ
